@@ -131,8 +131,6 @@
     .library-list-button { width: 100%; text-align: left; }
     .library-list-button[aria-current="true"] { background: linear-gradient(135deg, #1E3A5F 0%, #2D5A8C 100%); color: #FFF2BA; }
     .library-list-button[aria-current="true"] .library-list-meta { color: #FFF2BA; opacity: .85; }
-    .id-crop-frame { width: 100%; height: 210px; overflow: hidden; background: #f1f5f9; border-radius: 1rem; }
-    .id-crop-frame img { width: 100%; height: 100%; object-fit: contain; transform-origin: center; }
   </style>
 </head>
 <body class="bg-[#FFF2BA] text-slate-800 font-sans pb-28 pt-20 custom-scrollbar">
@@ -158,15 +156,6 @@
         </div>
       </div>
 
-      <!-- Quick Identity Badge -->
-      <div class="flex items-center space-x-3 cursor-pointer hover:bg-sky-50 p-1.5 rounded-xl transition" onclick="navigateToPage('profile')">
-        <div class="text-right hidden sm:block">
-          <p id="headerStudentName" class="text-xs font-semibold text-slate-900 leading-tight">Alex Rivera</p>
-          <p id="headerRegNo" class="text-[10px] text-slate-500 font-mono">DS-2024-8841</p>
-        </div>
-        <img id="headerAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Student Profile" class="w-9 h-9 rounded-full object-cover ring-2 ring-sky-500/30"/>
-      </div>
-
     </div>
   </header>
 
@@ -184,27 +173,18 @@
             <p id="homeDept" class="mt-2 text-[11px] text-slate-500"></p>
             <button onclick="navigateToPage('profile')" class="mt-3 text-xs font-semibold text-[#1E3A5F] hover:text-[#1E3A5F]">View profile <i class="fa-solid fa-arrow-right ml-1"></i></button>
           </div>
-          <div class="glass-card rounded-3xl p-5 shadow-sm">
+          <div class="glass-card rounded-3xl p-5 shadow-sm" aria-labelledby="collegeIdHeading">
             <div class="flex items-center justify-between gap-2 mb-3">
               <div>
-                <h3 class="text-sm font-bold text-slate-900">College ID card</h3>
-                <p class="text-[11px] text-slate-500">Stored privately in this browser.</p>
+                <h3 id="collegeIdHeading" class="text-sm font-bold text-slate-900">College ID card</h3>
+                <p class="text-[11px] text-slate-500">Upload an ID card image. It will be stored in this browser.</p>
               </div>
-              <label for="collegeIdInput" class="shrink-0 cursor-pointer rounded-xl bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] px-3 py-2 text-[11px] font-semibold text-white hover:shadow-md transition">
-                <i class="fa-solid fa-upload mr-1"></i><span id="collegeIdAction">Add ID</span>
-              </label>
-              <input id="collegeIdInput" type="file" accept="image/*,application/pdf,.pdf" class="hidden" onchange="uploadCollegeId(event)"/>
             </div>
             <div id="collegeIdPreview" class="min-h-36 rounded-2xl border-2 border-dashed border-[#FFF2BA] bg-gradient-to-br from-[#FFF2BA]/10 to-transparent flex items-center justify-center overflow-hidden">
               <div class="px-4 py-8 text-center text-slate-400">
                 <i class="fa-regular fa-id-card text-3xl"></i>
-                <p class="mt-2 text-xs">Your ID card preview will appear here</p>
+                <p class="mt-2 text-xs">Your ID card image will appear here</p>
               </div>
-            </div>
-            <div id="collegeIdActions" class="hidden mt-3 flex flex-wrap gap-2">
-              <button type="button" onclick="viewCollegeId()" class="rounded-lg bg-[#FFF2BA] px-3 py-2 text-[11px] font-semibold text-[#1E3A5F] hover:shadow-md transition"><i class="fa-regular fa-eye mr-1"></i>View / Zoom</button>
-              <button id="editCollegeIdButton" type="button" onclick="openIdEditor()" class="rounded-lg bg-[#FFF2BA] px-3 py-2 text-[11px] font-semibold text-[#1E3A5F] hover:shadow-md transition"><i class="fa-solid fa-crop-simple mr-1"></i>Edit / Crop</button>
-              <button type="button" onclick="removeCollegeId()" class="rounded-lg bg-rose-100 px-3 py-2 text-[11px] font-semibold text-rose-700 hover:bg-rose-200 transition"><i class="fa-solid fa-trash mr-1"></i>Delete</button>
             </div>
           </div>
         </aside>
@@ -287,11 +267,8 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 class="text-xl font-bold text-slate-900">My Course Modules</h2>
-          <p class="text-xs text-slate-500">Your subjects, documents, lecture notes, and syllabus resources.</p>
+          <p class="text-xs text-slate-500">Your subjects and uploaded materials are saved in this browser. Browse module resources and tutorials below.</p>
         </div>
-        <button onclick="openNewModuleModal()" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
-          <i class="fa-solid fa-plus"></i><span>Add Module</span>
-        </button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-5 items-start">
@@ -310,18 +287,28 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 class="text-xl font-bold text-slate-900">Lab Experiments & PDFs</h2>
-          <p class="text-xs text-slate-500">Practical implementations, data pipelines, experimental code logs, and PDF documentation.</p>
+          <p class="text-xs text-slate-500">Practical implementations, data pipelines, experimental code logs, and PDF documentation. Experiments are saved in this browser; upload files to GitHub from the repository.</p>
         </div>
-        <button onclick="openModal('addLabModal')" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
-          <i class="fa-solid fa-plus"></i><span>Add Lab Experiment</span>
-        </button>
+        <div class="flex flex-wrap gap-2">
+          <a href="https://github.com/harshitha859/Data-Science-project" rel="noopener noreferrer" target="_blank" class="border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 px-4 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 transition">
+            <i class="fa-brands fa-github"></i><span>Open GitHub Repo</span>
+          </a>
+          <button onclick="openModal('addLabModal')" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
+            <i class="fa-solid fa-plus"></i><span>Add Lab Experiment</span>
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-[minmax(190px,1fr)_minmax(300px,2fr)_minmax(220px,1.1fr)] gap-4 items-start">
       <div class="bg-white border border-[#1E3A5F]/20 100 rounded-2xl p-4 shadow-sm space-y-3">
         <div>
-          <h3 class="text-sm font-bold text-slate-900">Experiments</h3>
-          <p class="text-xs text-slate-500 mt-1">Select a saved experiment to load its code.</p>
+          <h3 class="text-sm font-bold text-slate-900">GitHub Experiments</h3>
+          <p class="text-xs text-slate-500 mt-1">Experiments currently in your repository.</p>
+        </div>
+        <div id="githubLabsList" class="max-h-[55vh] space-y-2 overflow-y-auto pr-1" aria-label="Experiments in GitHub repository"></div>
+        <div class="border-t border-slate-100 pt-3">
+          <h3 class="text-sm font-bold text-slate-900">Saved Experiments</h3>
+          <p class="text-xs text-slate-500 mt-1">Saved in this browser. Select one to load its code.</p>
         </div>
         <div id="labsList" class="space-y-3">
           <!-- Rendered Experiments -->
@@ -473,17 +460,38 @@
         </button>
       </div>
 
-      <!-- Detail Grid & Contact Bar -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-        <div class="space-y-3 text-xs">
-          <p><strong class="text-slate-500">Current Subject / Focus:</strong> <span id="profSubject" class="text-slate-800 font-medium">Advanced Neural Networks & Analytics</span></p>
-          <p><strong class="text-slate-500">Faculty Supervisor:</strong> <span id="profSupervisor" class="text-slate-800 font-medium">Dr. Eleanor Vance, Ph.D.</span></p>
-        </div>
+      <div class="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-6 pt-6 items-start">
+        <aside class="flex justify-center lg:justify-start">
+          <section class="glass-card rounded-3xl p-4 shadow-sm w-full max-w-[220px]" aria-labelledby="resumeHeading">
+            <div class="flex flex-col items-center gap-3">
+              <div class="text-center">
+                <h3 id="resumeHeading" class="text-sm font-bold text-slate-900">Resume</h3>
+                <p id="resumeFileName" class="mt-1 text-[11px] text-slate-500">No resume available.</p>
+              </div>
+              <div class="relative w-40 h-40 rounded-2xl border border-slate-100 bg-gradient-to-br from-[#FFF2BA] via-white to-[#EAF3FF] shadow-inner overflow-hidden">
+                <img id="resumeImage" class="hidden absolute inset-0 w-full h-full object-cover object-top" alt="Resume image"/>
+                <div id="resumePlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-400">
+                  <i class="fa-solid fa-file-lines text-3xl mb-2"></i>
+                  <span class="text-[10px] font-medium uppercase tracking-wider">Resume</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
 
-        <div class="flex items-center justify-start md:justify-end space-x-3">
-          <a id="linkGithub" href="https://github.com" target="_blank" class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] transition shadow-sm"><i class="fa-brands fa-github text-base"></i></a>
-          <a id="linkLinkedin" href="https://linkedin.com" target="_blank" class="w-10 h-10 rounded-xl bg-sky-700 text-white flex items-center justify-center hover:bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] transition shadow-sm"><i class="fa-brands fa-linkedin-in text-base"></i></a>
-          <a id="linkEmail" href="mailto:alex.rivera@university.edu" class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition shadow-sm"><i class="fa-solid fa-envelope text-base"></i></a>
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-3 text-xs">
+              <p><strong class="text-slate-500">Current Subject / Focus:</strong> <span id="profSubject" class="text-slate-800 font-medium">Advanced Neural Networks & Analytics</span></p>
+              <p><strong class="text-slate-500">Faculty Supervisor:</strong> <span id="profSupervisor" class="text-slate-800 font-medium">Dr. Eleanor Vance, Ph.D.</span></p>
+            </div>
+
+            <div class="flex items-center justify-start md:justify-end space-x-3">
+              <a id="linkGithub" href="https://github.com" target="_blank" class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] transition shadow-sm"><i class="fa-brands fa-github text-base"></i></a>
+              <a id="linkLinkedin" href="https://linkedin.com" target="_blank" class="w-10 h-10 rounded-xl bg-sky-700 text-white flex items-center justify-center hover:bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] transition shadow-sm"><i class="fa-brands fa-linkedin-in text-base"></i></a>
+              <a id="linkEmail" href="mailto:alex.rivera@university.edu" class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition shadow-sm"><i class="fa-solid fa-envelope text-base"></i></a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -565,7 +573,7 @@
         </div>
         <div>
           <label class="block font-medium mb-1">GitHub Repo Link</label>
-          <input type="url" id="lGithub" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="https://github.com/..."/>
+          <input type="url" id="lGithub" value="https://github.com/harshitha859/Data-Science-project" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="https://github.com/..."/>
         </div>
         <div>
           <label class="block font-medium mb-1">Upload Lab File (PDF/Code/Image)</label>
@@ -855,44 +863,26 @@
     </div>
   </div>
 
-  <div id="idEditorModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
-    <div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h3 class="text-sm font-bold text-slate-900">Edit & Crop ID Card</h3>
-          <p class="mt-1 text-xs text-slate-500">Adjust zoom, position, and crop frame. Preview or save your changes.</p>
-        </div>
-        <button type="button" onclick="closeModal('idEditorModal')" aria-label="Close ID card editor" class="text-slate-500 hover:text-slate-900 text-lg"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="id-crop-frame border-2 border-slate-300 bg-gradient-to-br from-slate-100 to-slate-50">
-        <img id="idEditorImage" alt="ID card crop preview"/>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-xs">
-        <label class="space-y-1.5 p-3 bg-slate-50 rounded-lg">
-          <span class="font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass text-[#1E3A5F]"></i>Zoom</span>
-          <input id="idZoom" type="range" min="1" max="3" step="0.05" value="1" oninput="updateIdCropPreview()" class="w-full accent-[#1E3A5F]"/>
-          <span class="text-slate-500" id="zoomLevel">100%</span>
-        </label>
-        <label class="space-y-1.5 p-3 bg-slate-50 rounded-lg">
-          <span class="font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-arrows-left-right text-[#1E3A5F]"></i>Horizontal</span>
-          <input id="idCropX" type="range" min="0" max="100" step="1" value="50" oninput="updateIdCropPreview()" class="w-full accent-[#1E3A5F]"/>
-          <span class="text-slate-500" id="xLevel">50%</span>
-        </label>
-        <label class="space-y-1.5 p-3 bg-slate-50 rounded-lg">
-          <span class="font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-arrows-up-down text-[#1E3A5F]"></i>Vertical</span>
-          <input id="idCropY" type="range" min="0" max="100" step="1" value="50" oninput="updateIdCropPreview()" class="w-full accent-[#1E3A5F]"/>
-          <span class="text-slate-500" id="yLevel">50%</span>
-        </label>
-      </div>
-      <div class="mt-5 flex justify-end gap-2">
-        <button type="button" onclick="closeModal('idEditorModal')" class="px-4 py-2.5 rounded-lg border-2 border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">Cancel</button>
-        <button type="button" onclick="saveIdCrop()" class="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white text-xs font-semibold shadow-md hover:shadow-lg transition"><i class="fa-solid fa-check mr-1.5"></i>Save Crop</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ================= JAVASCRIPT APP LOGIC ================= -->
   <script>
+    const labGithubRepoUrl = 'https://github.com/harshitha859/Data-Science-project';
+    const githubLabExperiments = [
+      { name: 'Create DataFrame', file: 'create_dataframe.py' },
+      { name: 'Create Multiple DataFrames', file: 'create_multiple_dataframes.py' },
+      { name: 'Data Analysis', file: 'data_analysis.py' },
+      { name: 'Data Cleaning', file: 'data_cleaning.py' },
+      { name: 'Excel Sheets Dictionary', file: 'excel_sheets_dictionary.py' },
+      { name: 'GitHub API Issues', file: 'github_api_issues.py' },
+      { name: 'Iris Analysis', file: 'iris_analysis.py' },
+      { name: 'JSON to Excel', file: 'json_to_excel.py' },
+      { name: 'Read CSV from URL', file: 'read_csv_from_url.py' },
+      { name: 'Read JSON from URL', file: 'read_json_from_url.py' },
+      { name: 'Read JSON with pandas', file: 'read_json_pandas.py' },
+      { name: 'SQLite Student Database', file: 'sqlite_student_database.py' },
+      { name: 'Student Data Creation', file: 'student_data_creation.py' },
+      { name: 'Student JSON Creation', file: 'student_json_creation.py' },
+      { name: 'Tab-delimited File', file: 'tab_limited_file.py' }
+    ];
     const defaultModules = [
       { title: 'Data Science Skills, Tools and Data Analysis', code: 'Module 1', instructor: '', desc: 'Build core data science foundations, tools, and analysis workflows.', docs: [] },
       { title: 'Data Extraction', code: 'Module 2', instructor: '', desc: 'Learn how to gather, clean, and prepare raw data for analysis.', docs: [] },
@@ -969,11 +959,11 @@
         { title: 'Streamlit Data Apps', category: 'Links', url: 'https://streamlit.io/' }
       ],
       activities: [],
-      collegeId: null
+      collegeId: null,
+      resume: null
     };
     let activeModuleIndex = 0;
     let activeToolIndex = 0;
-    let idEditorMode = 'edit';
 
     // Initialize Application
     window.addEventListener('DOMContentLoaded', async () => {
@@ -1609,14 +1599,12 @@
     function renderAll() {
       // Header & Profile
       document.getElementById('collegeLogo').src = state.profile.logo;
-      document.getElementById('headerStudentName').innerText = state.profile.name;
-      document.getElementById('headerRegNo').innerText = state.profile.regNo;
-      document.getElementById('headerAvatar').src = state.profile.avatar;
       document.getElementById('homeAvatar').src = state.profile.avatar;
       document.getElementById('homeStudentName').innerText = state.profile.name;
       document.getElementById('homeRegNo').innerText = state.profile.regNo;
       document.getElementById('homeDept').innerText = state.profile.dept;
       renderCollegeId();
+      renderResume();
 
       document.getElementById('profileAvatar').src = state.profile.avatar;
       document.getElementById('profName').innerText = state.profile.name;
@@ -1653,6 +1641,14 @@
       renderModuleLibrary();
 
       // Labs Render
+      const githubLabsList = document.getElementById('githubLabsList');
+      githubLabsList.innerHTML = githubLabExperiments.map(experiment => {
+        const url = `${labGithubRepoUrl}/blob/main/${encodeURIComponent(experiment.file)}`;
+        return `<a href="${escapeHtml(url)}" rel="noopener noreferrer" target="_blank" class="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] font-medium text-slate-700 hover:border-[#1E3A5F]/30 hover:text-[#1E3A5F]">
+          <i class="fa-brands fa-python text-[#1E3A5F]"></i><span class="min-w-0 flex-1">${escapeHtml(experiment.name)}</span><i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+        </a>`;
+      }).join('');
+
       const lList = document.getElementById('labsList');
       if (state.labs.length === 0) {
         lList.innerHTML = `<div class="rounded-2xl border-2 border-dashed border-[#1E3A5F]/20 200 bg-sky-50/50 p-5 text-center">
@@ -1670,7 +1666,7 @@
             <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${l.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : l.status === 'In Review' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${escapeHtml(l.status)}</span>
             ${l.code ? `<button type="button" onclick="loadLabExperiment(${idx})" class="w-full rounded-lg bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] px-3 py-2 text-[11px] font-semibold text-white hover:shadow-lg"><i class="fa-solid fa-code mr-1"></i>Load into editor</button>` : `<p class="text-[11px] text-slate-500">No saved code snippet.</p>`}
             <div class="flex flex-wrap gap-2 text-[11px]">
-              ${getSafeExternalUrl(l.github) ? `<a href="${escapeHtml(getSafeExternalUrl(l.github))}" rel="noopener noreferrer" target="_blank" class="text-[#1E3A5F] hover:underline"><i class="fa-brands fa-github mr-1"></i>Repo</a>` : ''}
+              ${getSafeExternalUrl(l.github || labGithubRepoUrl) ? `<a href="${escapeHtml(getSafeExternalUrl(l.github || labGithubRepoUrl))}" rel="noopener noreferrer" target="_blank" class="text-[#1E3A5F] hover:underline"><i class="fa-brands fa-github mr-1"></i>Repo</a>` : ''}
               ${l.file ? `${isPdfFile(l.file) ? `<button type="button" onclick="viewLabAttachment(${idx})" class="text-[#1E3A5F] hover:underline">View PDF</button>` : ''}<a href="${l.file.data}" download="${escapeHtml(l.file.name)}" class="text-[#1E3A5F] hover:underline"><i class="fa-solid fa-download mr-1"></i>File</a>` : ''}
             </div>
           </div>
@@ -1692,7 +1688,6 @@
                 }">${a.priority} Priority</span>
                 <h3 class="font-bold text-slate-900 text-sm mt-1">${escapeHtml(a.title)}</h3>
               </div>
-              <button onclick="deleteAssignment(${idx})" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-trash text-xs"></i></button>
             </div>
             <div class="text-xs text-slate-500 space-y-1">
               <p><i class="fa-regular fa-calendar mr-1 text-[#1E3A5F]"></i>Due: ${a.dueDate}</p>
@@ -1772,9 +1767,9 @@
             <button type="button" onclick="viewModuleDocument(${idx}, ${docIndex})" class="w-full rounded-lg px-2 py-1.5 text-left text-[10px] text-slate-600 hover:bg-sky-50 truncate" title="Open ${escapeHtml(doc.name)}"><i class="fa-regular fa-file-lines mr-1.5 text-[#1E3A5F]"></i>${escapeHtml(doc.name)}</button>
           `).join('')}</div>` : ''}
         </div>
-      `).join('') : `<div class="rounded-xl bg-white/70 p-4 text-center"><p class="text-xs font-semibold">No modules yet</p><button onclick="openNewModuleModal()" class="mt-2 text-xs font-semibold text-[#1E3A5F]">Add your first module</button></div>`;
+      `).join('') : `<div class="rounded-xl bg-white/70 p-4 text-center"><p class="text-xs font-semibold">No modules available</p></div>`;
       if (!state.modules.length) {
-        detail.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center"><i class="fa-solid fa-book-open text-3xl text-[#1E3A5F]"></i><h3 class="mt-3 text-sm font-bold">Your learning space</h3><p class="mt-1 text-xs text-slate-500">Choose a module from the contents list or add a new one.</p></div>`;
+        detail.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center"><i class="fa-solid fa-book-open text-3xl text-[#1E3A5F]"></i><h3 class="mt-3 text-sm font-bold">Your learning space</h3><p class="mt-1 text-xs text-slate-500">No saved modules are available.</p></div>`;
         return;
       }
       if (activeModuleIndex >= state.modules.length) activeModuleIndex = 0;
@@ -1785,19 +1780,18 @@
             <div><span class="inline-flex rounded-lg bg-[#FFF2BA]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]">${escapeHtml(module.code)}</span>
               <h3 class="mt-3 text-xl font-bold text-slate-900">${escapeHtml(module.title)}</h3>
               <p class="mt-1 text-xs font-medium text-[#1E3A5F]">Instructor: ${escapeHtml(module.instructor || 'Not specified')}</p></div>
-            <div class="flex gap-2"><button onclick="openEditModule(${activeModuleIndex})" class="rounded-lg bg-[#FFF2BA]/20 px-3 py-2 text-xs font-semibold text-[#1E3A5F]"><i class="fa-solid fa-pen mr-1"></i>Edit</button><button onclick="deleteModule(${activeModuleIndex})" class="rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700"><i class="fa-solid fa-trash mr-1"></i>Delete</button></div>
           </div>
           <p class="mt-4 text-sm leading-6 text-slate-600">${escapeHtml(module.desc || 'Add a short description to organize your module.')}</p>
-          <div class="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+          <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
             <h4 class="text-sm font-bold text-slate-900">Module materials <span class="text-slate-400">(${(module.docs || []).length})</span></h4>
-            <button onclick="openUploadModuleDoc(${activeModuleIndex})" class="rounded-lg bg-sky-700 px-3 py-2 text-xs font-semibold text-white"><i class="fa-solid fa-plus mr-1"></i>Add material</button>
+            <a href="${escapeHtml(getSafeExternalUrl(module.youtube) || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${module.title} data science tutorial`)}`)}" rel="noopener noreferrer" target="_blank" class="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"><i class="fa-brands fa-youtube mr-1"></i>YouTube tutorials</a>
           </div>
           ${(module.docs || []).length ? `<div class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-100 bg-white">${module.docs.map((doc, docIndex) => `
             <div class="flex flex-wrap items-center justify-between gap-3 p-3">
               <button type="button" onclick="viewModuleDocument(${activeModuleIndex}, ${docIndex})" class="min-w-0 flex-1 text-left text-xs font-semibold text-[#1E3A5F] hover:underline"><i class="fa-regular ${isPdfFile(doc.file) ? 'fa-file-pdf' : 'fa-file-lines'} mr-2 text-[#1E3A5F]"></i>${escapeHtml(doc.name)}</button>
-                  <div class="flex items-center gap-3 text-xs">${isPdfFile(doc.file) ? `<button type="button" onclick="viewModuleDocument(${activeModuleIndex}, ${docIndex})" class="font-semibold text-[#1E3A5F] hover:underline"><i class="fa-solid fa-book-open mr-1"></i>Open flipbook</button>` : ''}<a href="${doc.file.data}" download="${escapeHtml(doc.file.name)}" class="text-[#1E3A5F] hover:underline">Download</a><button onclick="deleteModuleDoc(${activeModuleIndex}, ${docIndex})" aria-label="Delete ${escapeHtml(doc.name)}" class="text-rose-600 hover:text-rose-800">Delete</button></div>
+                  <div class="flex items-center gap-3 text-xs">${isPdfFile(doc.file) ? `<button type="button" onclick="viewModuleDocument(${activeModuleIndex}, ${docIndex})" class="font-semibold text-[#1E3A5F] hover:underline"><i class="fa-solid fa-book-open mr-1"></i>Open flipbook</button>` : ''}<a href="${doc.file.data}" download="${escapeHtml(doc.file.name)}" class="text-[#1E3A5F] hover:underline">Download</a></div>
             </div>
-          `).join('')}</div>` : `<p class="mt-3 rounded-xl border border-dashed border-[#1E3A5F]/20 200 bg-white/70 p-5 text-center text-xs text-slate-500">No materials yet. Add lecture slides, notes, or PDFs here.</p>`}
+          `).join('')}</div>` : `<p class="mt-3 rounded-xl border border-dashed border-[#1E3A5F]/20 200 bg-white/70 p-5 text-center text-xs text-slate-500">No uploaded materials for this module.</p>`}
         </article>`;
     }
 
@@ -1998,145 +1992,63 @@
 
     // ================= ACTIONS & SAVE HANDLERS =================
 
+    function renderResume() {
+      const fileName = document.getElementById('resumeFileName');
+      const image = document.getElementById('resumeImage');
+      const placeholder = document.getElementById('resumePlaceholder');
+      if (!state.resume) {
+        fileName.textContent = 'No resume available.';
+        image.classList.add('hidden');
+        image.removeAttribute('src');
+        placeholder.classList.remove('hidden');
+        return;
+      }
+      fileName.textContent = state.resume.name;
+      if ((state.resume.type || '').startsWith('image/')) {
+        image.src = state.resume.data;
+        image.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      } else {
+        image.classList.add('hidden');
+        image.removeAttribute('src');
+        placeholder.classList.remove('hidden');
+      }
+    }
+
     function renderCollegeId() {
       const preview = document.getElementById('collegeIdPreview');
-      const action = document.getElementById('collegeIdAction');
-        const actions = document.getElementById('collegeIdActions');
-        const editButton = document.getElementById('editCollegeIdButton');
-        const card = state.collegeId;
-        preview.replaceChildren();
-        if (!card) {
+      preview.replaceChildren();
+      if (!state.collegeId || !(state.collegeId.type || '').startsWith('image/')) {
         preview.innerHTML = `<div class="px-4 py-8 text-center text-slate-400">
           <i class="fa-regular fa-id-card text-3xl"></i>
-          <p class="mt-2 text-xs">Your ID card preview will appear here</p>
+          <p class="mt-2 text-xs">Your ID card image will appear here</p>
         </div>`;
-        action.textContent = 'Add ID';
-        actions.classList.add('hidden');
         return;
       }
-      action.textContent = 'Replace';
-      actions.classList.remove('hidden');
-      editButton.classList.toggle('hidden', isPdfFile(card));
-      if (isPdfFile(card)) {
-        preview.innerHTML = `<div class="p-6 text-center">
-          <i class="fa-solid fa-file-pdf text-4xl text-[#1E3A5F]"></i>
-          <p class="mt-2 max-w-full truncate text-xs font-semibold text-slate-700">${escapeHtml(card.name)}</p>
-          <button type="button" onclick="viewCollegeIdPdf()" class="mt-3 rounded-lg bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] px-3 py-2 text-xs font-semibold text-white hover:shadow-lg">Preview ID card</button>
-        </div>`;
-      } else {
-        const image = document.createElement('img');
-        image.src = card.data;
-        image.alt = 'Uploaded college ID card';
-        image.className = 'max-h-52 w-full cursor-zoom-in object-contain';
-        image.title = 'Click to view and zoom';
-        image.onclick = viewCollegeId;
-        preview.appendChild(image);
-      }
-    }
-
-    function viewCollegeId() {
-      if (!state.collegeId) return;
-      if (isPdfFile(state.collegeId)) {
-        viewFile(state.collegeId);
-        return;
-      }
-      openIdCardModal('view');
-    }
-
-    function openIdEditor() {
-      if (!state.collegeId || isPdfFile(state.collegeId)) return;
-      openIdCardModal('edit');
-    }
-
-    function openIdCardModal(mode) {
-      idEditorMode = mode;
-      const modal = document.getElementById('idEditorModal');
-      document.getElementById('idEditorImage').src = state.collegeId.data;
-      document.getElementById('idZoom').value = '1';
-      document.getElementById('idCropX').value = '50';
-      document.getElementById('idCropY').value = '50';
-      modal.querySelectorAll('input[type="range"]').forEach(input => input.classList.toggle('hidden', mode === 'view' && input.id !== 'idZoom'));
-      modal.querySelector('p').textContent = mode === 'view' ? 'Use zoom to inspect your ID card, then close when finished.' : 'Adjust zoom and position, then save the cropped image.';
-      modal.querySelector('button[onclick="saveIdCrop()"]').classList.toggle('hidden', mode === 'view');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      updateIdCropPreview();
-    }
-
-    function updateIdCropPreview() {
-      const image = document.getElementById('idEditorImage');
-      const zoomVal = Number(document.getElementById('idZoom').value);
-      const xVal = Number(document.getElementById('idCropX').value);
-      const yVal = Number(document.getElementById('idCropY').value);
-      
-      image.style.objectFit = 'cover';
-      image.style.objectPosition = `${xVal}% ${yVal}%`;
-      image.style.transform = `scale(${zoomVal})`;
-      
-      document.getElementById('zoomLevel').textContent = Math.round(zoomVal * 100) + '%';
-      document.getElementById('xLevel').textContent = xVal + '%';
-      document.getElementById('yLevel').textContent = yVal + '%';
-    }
-
-    async function saveIdCrop() {
-      const image = document.getElementById('idEditorImage');
-      if (!image.complete || !image.naturalWidth || idEditorMode !== 'edit') {
-        alert('The ID card image is not ready to crop yet.');
-        return;
-      }
-      const zoom = Number(document.getElementById('idZoom').value);
-      const xPosition = Number(document.getElementById('idCropX').value) / 100;
-      const yPosition = Number(document.getElementById('idCropY').value) / 100;
-      const aspect = 640 / 420;
-      let cropWidth = Math.min(image.naturalWidth, image.naturalHeight * aspect) / zoom;
-      let cropHeight = cropWidth / aspect;
-      if (cropHeight > image.naturalHeight) {
-        cropHeight = image.naturalHeight / zoom;
-        cropWidth = cropHeight * aspect;
-      }
-      const sourceX = (image.naturalWidth - cropWidth) * xPosition;
-      const sourceY = (image.naturalHeight - cropHeight) * yPosition;
-      const canvas = document.createElement('canvas');
-      canvas.width = 960;
-      canvas.height = Math.round(canvas.width / aspect);
-      const context = canvas.getContext('2d');
-      if (!context) {
-        alert('Your browser could not prepare the cropped image.');
-        return;
-      }
-      context.drawImage(image, sourceX, sourceY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
-      state.collegeId = { ...state.collegeId, type: 'image/png', data: canvas.toDataURL('image/png') };
-      logActivity('Edited and cropped College ID Card');
-      closeModal('idEditorModal');
-      await saveState();
+      const image = document.createElement('img');
+      image.src = state.collegeId.data;
+      image.alt = 'Uploaded college ID card';
+      image.className = 'max-h-52 w-full object-contain';
+      preview.appendChild(image);
     }
 
     async function uploadCollegeId(event) {
-      const file = event.target.files[0];
-      event.target.value = '';
+      const input = event.target;
+      const file = input.files[0];
+      input.value = '';
       if (!file) return;
-      if (!file.type.startsWith('image/') && file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-        alert('Choose an image or PDF file for your college ID card.');
+      if (!file.type.startsWith('image/')) {
+        alert('Choose an image file for your college ID card.');
         return;
       }
       try {
         state.collegeId = await fileToBase64(file);
-        logActivity('Updated College ID Card');
+        logActivity('Uploaded College ID Card');
         await saveState();
       } catch (error) {
         console.error('Could not read college ID card:', error);
-        alert('Could not read this ID card file. Please try another image or PDF.');
+        alert('Could not read this ID card image. Please try another image.');
       }
-    }
-
-    async function removeCollegeId() {
-      state.collegeId = null;
-      logActivity('Removed College ID Card');
-      await saveState();
-    }
-
-    function viewCollegeIdPdf() {
-      if (state.collegeId) viewFile(state.collegeId);
     }
 
     async function uploadLogo(e) {
@@ -2145,7 +2057,7 @@
         const res = await fileToBase64(file);
         state.profile.logo = res.data;
         logActivity('Updated College Emblem Logo');
-        saveState();
+        await saveState();
       }
     }
 
@@ -2223,9 +2135,9 @@
       state.modules[idx].docs.push({ name: name, file: fileRes });
       activeModuleIndex = idx;
       logActivity(`Uploaded document to ${state.modules[idx].title}`);
+      if (!(await saveState())) return;
       closeModal('uploadModuleDocModal');
       e.target.reset();
-      saveState();
     }
 
     function deleteModuleDoc(moduleIndex, documentIndex) {
@@ -2248,7 +2160,7 @@
         title: document.getElementById('lTitle').value,
         status: document.getElementById('lStatus').value,
         code: document.getElementById('lCode').value,
-        github: document.getElementById('lGithub').value,
+        github: document.getElementById('lGithub').value || labGithubRepoUrl,
         file: fileRes
       };
       state.labs.push(lab);
@@ -2280,11 +2192,6 @@
       logActivity(`Added Assignment: ${item.title}`);
       closeModal('addAssignmentModal');
       e.target.reset();
-      saveState();
-    }
-
-    function deleteAssignment(idx) {
-      state.assignments.splice(idx, 1);
       saveState();
     }
 
