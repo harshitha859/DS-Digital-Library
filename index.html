@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DATA SCIENCE DIGITAL LIBRARY</title>
+  
+  <!-- Tailwind CSS & FontAwesome Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sky: {
+              50: '#FFFDF3',
+              100: '#FFF8D9',
+              200: '#FFF2BA',
+              300: '#C7D3E8',
+              400: '#65789F',
+              500: '#304A78',
+              600: '#1C315E',
+              700: '#14264E',
+              800: '#0D1B3D',
+              900: '#030F3C'
+            },
+            skyAccent: '#030F3C',
+            skyDark: '#030F3C',
+            skyLight: '#FFF2BA',
+            iceBlue: '#FFF8D9',
+            softIce: '#FFF2BA',
+            darkSlate: '#0F172A',
+            mutedGray: '#64748B'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body { background: linear-gradient(135deg, #FFF2BA 0%, #FFF8D9 100%); min-height: 100vh; }
+    .glass-nav {
+      background: rgba(255, 248, 217, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 10px 25px -5px rgba(30, 58, 95, 0.15), 0 8px 10px -6px rgba(30, 58, 95, 0.08);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 242, 186, 0.6);
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #FFF2BA; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #D4AF6A; border-radius: 4px; }
+    .app-page:not(.active) { display: none !important; }
+    .app-page.active { display: block; }
+    .pdf-page-turn { backface-visibility: hidden; animation-duration: 420ms; animation-timing-function: ease; animation-fill-mode: both; }
+    .pdf-page-turn-next { transform-origin: left center; animation-name: pdf-page-turn-next; }
+    .pdf-page-turn-previous { transform-origin: right center; animation-name: pdf-page-turn-previous; }
+    #pdfViewerStage { touch-action: pan-y; }
+    #pdfViewerContent { width: max-content; max-width: none; margin: auto; flex: none; }
+    #pdfViewerContent canvas { cursor: default; user-select: none; -webkit-user-select: none; }
+    #pdfViewerContent .pdf-spread-page-left canvas, #pdfViewerContent .pdf-spread-page-right canvas { cursor: grab; }
+    #pdfViewerStage.pdf-page-dragging canvas { cursor: grabbing; }
+    .pdf-book { position: relative; perspective: 1600px; transform-style: preserve-3d; filter: drop-shadow(0 12px 12px rgba(60, 42, 20, .18)); }
+    .pdf-spread, .pdf-book-underlay { display: flex; }
+    .pdf-spread {
+      position: relative;
+      isolation: isolate;
+      gap: 0;
+      border-radius: 3px;
+      background: #fff;
+      box-shadow: 0 2px 0 #d7d0c5, 0 8px 16px rgba(52, 40, 25, .14);
+    }
+    .pdf-spread::after {
+      content: "";
+      position: absolute;
+      z-index: 2;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 14px;
+      transform: translateX(-50%);
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent, rgba(50, 38, 25, .12) 50%, transparent);
+    }
+    .pdf-book-underlay, .pdf-turn-sheet, .pdf-turn-face, .pdf-book-static-page { position: absolute; }
+    .pdf-book-underlay { inset: 0; z-index: 0; }
+    .pdf-spread-page { position: relative; flex: 0 0 50%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; }
+    .pdf-spread-page-left { box-shadow: inset -8px 0 10px -10px rgba(50, 35, 20, .5); }
+    .pdf-spread-page-right { box-shadow: inset 8px 0 10px -10px rgba(50, 35, 20, .5); }
+    .pdf-spread-page canvas { display: block; max-width: 100%; max-height: 100%; }
+    .pdf-spread-page-empty canvas { visibility: hidden; }
+    .pdf-book-static-page { top: 0; bottom: 0; z-index: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; }
+    .pdf-book-static-left { left: 0; }
+    .pdf-book-static-right { right: 0; }
+    .pdf-turn-sheet { z-index: 1; transform-style: preserve-3d; }
+    .pdf-turn-face { overflow: hidden; backface-visibility: hidden; background: #fff; }
+    .pdf-turn-face { inset: 0; display: flex; align-items: center; justify-content: center; }
+    .pdf-turn-face canvas { display: block; max-width: 100%; max-height: 100%; }
+    .pdf-turn-face-back { transform: rotateY(180deg); }
+    .pdf-turn-face-front::after, .pdf-turn-face-back::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: var(--fold-opacity, 0);
+    }
+    .pdf-turn-face-front::after { background: linear-gradient(90deg, transparent 58%, rgba(50, 35, 20, .36) 100%); }
+    .pdf-turn-face-back::after { background: linear-gradient(270deg, transparent 55%, rgba(50, 35, 20, .28) 100%); }
+    @keyframes pdf-page-turn-next {
+      from { opacity: .65; transform: perspective(1200px) rotateY(-80deg); }
+      to { opacity: 1; transform: perspective(1200px) rotateY(0); }
+    }
+    @keyframes pdf-page-turn-previous {
+      from { opacity: .65; transform: perspective(1200px) rotateY(80deg); }
+      to { opacity: 1; transform: perspective(1200px) rotateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pdf-page-turn { animation-duration: 1ms; }
+    }
+    .library-list-button { width: 100%; text-align: left; }
+    .library-list-button[aria-current="true"] { background: linear-gradient(135deg, #1E3A5F 0%, #2D5A8C 100%); color: #FFF2BA; }
+    .library-list-button[aria-current="true"] .library-list-meta { color: #FFF2BA; opacity: .85; }
+    .id-crop-frame { width: 100%; height: 210px; overflow: hidden; background: #f1f5f9; border-radius: 1rem; }
+    .id-crop-frame img { width: 100%; height: 100%; object-fit: contain; transform-origin: center; }
+  </style>
+</head>
+<body class="bg-[#FFF2BA] text-slate-800 font-sans pb-28 pt-20 custom-scrollbar">
+
+  <!-- ================= 1. FIXED TOP HEADER ================= -->
+  <header class="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#1E3A5F]/20 100 shadow-sm h-16 transition-all">
+    <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+      
+      <!-- College Logo & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="relative group cursor-pointer" onclick="document.getElementById('logoInput').click()">
+          <img id="collegeLogo" src="https://via.placeholder.com/40/4D0E13/FFFFFF?text=DS" alt="College Logo" class="w-10 h-10 rounded-lg object-cover border border-[#1E3A5F]/20 200 shadow-sm transition group-hover:opacity-80"/>
+          <div class="absolute inset-0 bg-sky-900/40 rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+            <i class="fa-solid fa-camera text-white text-xs"></i>
+          </div>
+          <input type="file" id="logoInput" accept="image/*" class="hidden" onchange="uploadLogo(event)" />
+        </div>
+        <div>
+          <h1 class="text-xs sm:text-sm font-bold text-slate-900 tracking-tight leading-none uppercase">
+            DATA SCIENCE DIGITAL LIBRARY
+          </h1>
+          <p class="text-[10px] sm:text-xs text-[#1E3A5F] font-medium">Academic Library & Student Portfolio</p>
+        </div>
+      </div>
+
+      <!-- Quick Identity Badge -->
+      <div class="flex items-center space-x-3 cursor-pointer hover:bg-sky-50 p-1.5 rounded-xl transition" onclick="navigateToPage('profile')">
+        <div class="text-right hidden sm:block">
+          <p id="headerStudentName" class="text-xs font-semibold text-slate-900 leading-tight">Alex Rivera</p>
+          <p id="headerRegNo" class="text-[10px] text-slate-500 font-mono">DS-2024-8841</p>
+        </div>
+        <img id="headerAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Student Profile" class="w-9 h-9 rounded-full object-cover ring-2 ring-sky-500/30"/>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4">
+
+    <!-- ================= 2. WELCOME / OVERVIEW SECTION ================= -->
+    <section id="home" class="app-page active">
+      <div class="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6 items-start">
+        <aside class="space-y-4">
+          <div class="glass-card rounded-3xl p-5 text-center shadow-sm">
+            <img id="homeAvatar" src="" alt="Student profile" class="w-20 h-20 mx-auto rounded-2xl object-cover ring-4 ring-sky-100 shadow-sm"/>
+            <h2 id="homeStudentName" class="mt-3 text-base font-bold text-slate-900"></h2>
+            <p id="homeRegNo" class="text-xs font-mono text-[#1E3A5F]"></p>
+            <p id="homeDept" class="mt-2 text-[11px] text-slate-500"></p>
+            <button onclick="navigateToPage('profile')" class="mt-3 text-xs font-semibold text-[#1E3A5F] hover:text-[#1E3A5F]">View profile <i class="fa-solid fa-arrow-right ml-1"></i></button>
+          </div>
+          <div class="glass-card rounded-3xl p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">College ID card</h3>
+                <p class="text-[11px] text-slate-500">Stored privately in this browser.</p>
+              </div>
+              <label for="collegeIdInput" class="shrink-0 cursor-pointer rounded-xl bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] px-3 py-2 text-[11px] font-semibold text-white hover:shadow-md transition">
+                <i class="fa-solid fa-upload mr-1"></i><span id="collegeIdAction">Add ID</span>
+              </label>
+              <input id="collegeIdInput" type="file" accept="image/*,application/pdf,.pdf" class="hidden" onchange="uploadCollegeId(event)"/>
+            </div>
+            <div id="collegeIdPreview" class="min-h-36 rounded-2xl border-2 border-dashed border-[#FFF2BA] bg-gradient-to-br from-[#FFF2BA]/10 to-transparent flex items-center justify-center overflow-hidden">
+              <div class="px-4 py-8 text-center text-slate-400">
+                <i class="fa-regular fa-id-card text-3xl"></i>
+                <p class="mt-2 text-xs">Your ID card preview will appear here</p>
+              </div>
+            </div>
+            <div id="collegeIdActions" class="hidden mt-3 flex flex-wrap gap-2">
+              <button type="button" onclick="viewCollegeId()" class="rounded-lg bg-[#FFF2BA] px-3 py-2 text-[11px] font-semibold text-[#1E3A5F] hover:shadow-md transition"><i class="fa-regular fa-eye mr-1"></i>View / Zoom</button>
+              <button id="editCollegeIdButton" type="button" onclick="openIdEditor()" class="rounded-lg bg-[#FFF2BA] px-3 py-2 text-[11px] font-semibold text-[#1E3A5F] hover:shadow-md transition"><i class="fa-solid fa-crop-simple mr-1"></i>Edit / Crop</button>
+              <button type="button" onclick="removeCollegeId()" class="rounded-lg bg-rose-100 px-3 py-2 text-[11px] font-semibold text-rose-700 hover:bg-rose-200 transition"><i class="fa-solid fa-trash mr-1"></i>Delete</button>
+            </div>
+          </div>
+        </aside>
+        <div class="space-y-6">
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#1E3A5F] via-[#2D5A8C] to-[#1E3A5F] text-white p-6 sm:p-10 shadow-2xl mb-8">
+        <div class="absolute inset-0 opacity-5">
+          <div class="absolute top-0 left-0 w-96 h-96 bg-[#FFF2BA] rounded-full filter blur-3xl"></div>
+          <div class="absolute bottom-0 right-0 w-72 h-72 bg-[#FFF2BA] rounded-full filter blur-3xl"></div>
+        </div>
+        <div class="relative z-10 grid grid-cols-1 md:grid-cols-[1fr_0.85fr] gap-6 items-center">
+          <div class="max-w-2xl">
+            <span class="inline-block px-4 py-1.5 bg-[#FFF2BA]/15 text-[#FFF2BA] rounded-full text-xs font-semibold tracking-wide uppercase mb-4 border border-[#FFF2BA]/30 backdrop-blur">🎓 Welcome to Your Learning Hub</span>
+            <h2 class="text-3xl sm:text-5xl font-black tracking-tight mb-3 leading-tight">DATA SCIENCE<br/>DIGITAL LIBRARY</h2>
+            <p class="text-[#FFF8D9] text-sm sm:text-base leading-relaxed mb-7 font-light">Master cutting-edge tools, hands-on lab work, and comprehensive course materials. Build your data science expertise in one beautiful, organized workspace.</p>
+            <button onclick="navigateToPage('modules')" class="bg-[#FFF2BA] text-[#1E3A5F] hover:bg-white px-6 py-3 rounded-xl font-bold text-sm transition shadow-lg hover:shadow-xl flex items-center space-x-2 group">
+              <span>Explore Modules & Tools</span>
+              <i class="fa-solid fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
+            </button>
+          </div>
+          <div class="relative">
+            <img src="./assets/data-science-library.png" alt="Open digital library with data science analytics" class="h-44 sm:h-60 w-full rounded-3xl object-cover object-center ring-2 ring-[#FFF2BA]/20 shadow-2xl"/>
+            <div class="absolute inset-0 rounded-3xl bg-gradient-to-t from-[#1E3A5F]/40 to-transparent"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Counters Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div class="glass-card p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-xl bg-[#FFF2BA] text-[#1E3A5F] flex items-center justify-center mb-2"><i class="fa-solid fa-book text-lg"></i></div>
+          <span id="cntModules" class="text-2xl font-bold text-[#1E3A5F]">0</span>
+          <span class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Modules</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-xl bg-[#FFF2BA] text-[#1E3A5F] flex items-center justify-center mb-2"><i class="fa-solid fa-flask text-lg"></i></div>
+          <span id="cntLabs" class="text-2xl font-bold text-[#1E3A5F]">0</span>
+          <span class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Lab Experiments</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-xl bg-[#FFF2BA] text-[#1E3A5F] flex items-center justify-center mb-2"><i class="fa-solid fa-file-signature text-lg"></i></div>
+          <span id="cntAssignments" class="text-2xl font-bold text-[#1E3A5F]">0</span>
+          <span class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Assignments</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-xl bg-[#FFF2BA] text-[#1E3A5F] flex items-center justify-center mb-2"><i class="fa-solid fa-code-branch text-lg"></i></div>
+          <span id="cntProjects" class="text-2xl font-bold text-[#1E3A5F]">0</span>
+          <span class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Projects</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-xl bg-[#FFF2BA] text-[#1E3A5F] flex items-center justify-center mb-2"><i class="fa-solid fa-toolbox text-lg"></i></div>
+          <span id="cntTools" class="text-2xl font-bold text-[#1E3A5F]">0</span>
+          <span class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Toolstack</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition">
+          <div class="w-10 h-10 rounded-xl bg-[#FFF2BA] text-[#1E3A5F] flex items-center justify-center mb-2"><i class="fa-solid fa-folder-open text-lg"></i></div>
+          <span id="cntResources" class="text-2xl font-bold text-[#1E3A5F]">0</span>
+          <span class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Resources</span>
+        </div>
+      </div>
+
+      <!-- Recent Activity Stream -->
+      <div class="bg-white border border-[#1E3A5F]/20 100 rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center space-x-2">
+            <i class="fa-solid fa-clock-rotate-left text-[#1E3A5F]"></i>
+            <span>Recent Activity Log</span>
+          </h3>
+          <button onclick="clearActivity()" class="text-[11px] text-slate-400 hover:text-red-500 transition">Clear Log</button>
+        </div>
+        <ul id="activityLog" class="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2 text-xs">
+          <!-- Dynamic Log Entries -->
+        </ul>
+      </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. MY MODULES SECTION (MAX 5) ================= -->
+    <section id="modules" class="app-page space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">My Course Modules</h2>
+          <p class="text-xs text-slate-500">Your subjects, documents, lecture notes, and syllabus resources.</p>
+        </div>
+        <button onclick="openNewModuleModal()" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
+          <i class="fa-solid fa-plus"></i><span>Add Module</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-5 items-start">
+        <aside class="glass-card rounded-2xl p-4 shadow-sm">
+          <h3 class="text-xs uppercase tracking-wider font-bold text-slate-500 mb-3">Module contents</h3>
+          <div id="modulesList" class="space-y-2" aria-label="Course modules"></div>
+        </aside>
+        <div id="moduleDetail" class="min-h-72">
+          <!-- Selected module content -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4. LAB EXPERIMENTS SECTION ================= -->
+    <section id="labs" class="app-page space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Lab Experiments & PDFs</h2>
+          <p class="text-xs text-slate-500">Practical implementations, data pipelines, experimental code logs, and PDF documentation.</p>
+        </div>
+        <button onclick="openModal('addLabModal')" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
+          <i class="fa-solid fa-plus"></i><span>Add Lab Experiment</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(190px,1fr)_minmax(300px,2fr)_minmax(220px,1.1fr)] gap-4 items-start">
+      <div class="bg-white border border-[#1E3A5F]/20 100 rounded-2xl p-4 shadow-sm space-y-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Experiments</h3>
+          <p class="text-xs text-slate-500 mt-1">Select a saved experiment to load its code.</p>
+        </div>
+        <div id="labsList" class="space-y-3">
+          <!-- Rendered Experiments -->
+        </div>
+      </div>
+      <div class="bg-white border border-[#1E3A5F]/20 100 rounded-2xl p-5 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Code editor</h3>
+            <p class="text-xs text-slate-500 mt-1">Code runs in the Judge0 online sandbox. Internet is required; do not send private code or secrets.</p>
+          </div>
+          <select id="compilerLanguage" aria-label="Programming language" class="px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white">
+            <option value="python">Python 3</option>
+            <option value="pytorch">PyTorch (Python)</option>
+            <option value="pandas">pandas (Python)</option>
+            <option value="numpy">NumPy (Python)</option>
+            <option value="java">Java</option>
+            <option value="c">C</option>
+            <option value="cpp">C++</option>
+            <option value="r">R</option>
+          </select>
+        </div>
+        <textarea id="compilerCode" rows="13" spellcheck="false" class="w-full px-3 py-2 border border-slate-200 rounded-lg font-mono text-xs bg-slate-900 text-emerald-200 focus:outline-none focus:border-[#1E3A5F]/20 500 resize-y" aria-label="Code editor" placeholder="Write your experiment code here..."></textarea>
+        <p class="text-[10px] text-slate-500">PyTorch, pandas, and NumPy use the selected Python runtime; package availability depends on the online sandbox and is not installed by this page.</p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input id="compilerInput" type="text" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-xs" placeholder="Optional standard input"/>
+          <button id="runCodeButton" type="button" onclick="runLabCode()" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold"><i class="fa-solid fa-play mr-1"></i>Run code</button>
+        </div>
+        <div>
+          <label for="compilerExpected" class="block text-xs font-semibold text-slate-700 mb-1">Sample output (expected)</label>
+          <textarea id="compilerExpected" rows="4" spellcheck="false" class="w-full px-3 py-2 border border-slate-200 rounded-lg font-mono text-xs bg-sky-50 text-slate-800 focus:outline-none focus:border-[#1E3A5F]/20 500 resize-y" placeholder="Paste the expected output here to compare..."></textarea>
+        </div>
+      </div>
+      <div class="bg-white border border-[#1E3A5F]/20 100 rounded-2xl p-5 shadow-sm space-y-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Original output</h3>
+          <p class="text-xs text-slate-500 mt-1">Actual output from the online runner.</p>
+        </div>
+        <p id="compilerComparison" class="hidden rounded-lg px-3 py-2 text-xs font-semibold" aria-live="polite"></p>
+        <pre id="compilerOutput" aria-live="polite" class="whitespace-pre-wrap break-words bg-slate-900 text-slate-100 rounded-xl p-4 text-xs font-mono min-h-40 max-h-[60vh] overflow-auto">Run your code to see its output here.</pre>
+      </div>
+      </div>
+    </section>
+
+    <!-- ================= 5. ASSIGNMENTS SECTION ================= -->
+    <section id="assignments" class="app-page space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Assignments Tracker</h2>
+          <p class="text-xs text-slate-500">Academic tasks, due dates, and solution uploads.</p>
+        </div>
+        <button onclick="openModal('addAssignmentModal')" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
+          <i class="fa-solid fa-plus"></i><span>Add Assignment</span>
+        </button>
+      </div>
+
+      <div id="assignmentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered Assignments Dynamic -->
+      </div>
+    </section>
+
+    <!-- ================= 6. PROJECTS PORTFOLIO SECTION ================= -->
+    <section id="projects" class="app-page space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Projects Portfolio</h2>
+          <p class="text-xs text-slate-500">Showcase machine learning models, analytics tools, and live demos.</p>
+        </div>
+        <button onclick="openNewProjectModal()" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
+          <i class="fa-solid fa-plus"></i><span>Add Project</span>
+        </button>
+      </div>
+
+      <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Rendered Projects Dynamic -->
+      </div>
+    </section>
+
+    <!-- ================= 7. TOOLS SECTION ================= -->
+    <section id="tools" class="app-page space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Data Science Toolstack</h2>
+          <p class="text-xs text-slate-500">Quick launcher for software, IDEs, platforms, and analytics engines.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="downloadToolPresentation()" class="rounded-xl border border-[#1E3A5F] px-4 py-2 text-xs font-semibold text-[#1E3A5F] hover:bg-[#FFF2BA]/10"><i class="fa-solid fa-file-powerpoint mr-1"></i>Download tools PPT</button>
+          <button onclick="openNewToolModal()" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
+            <i class="fa-solid fa-plus"></i><span>Add Tool</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-5 items-start">
+        <aside class="glass-card rounded-2xl p-4 shadow-sm">
+          <h3 class="text-xs uppercase tracking-wider font-bold text-slate-500 mb-3">Learning contents</h3>
+          <div id="toolsList" class="space-y-2" aria-label="Data science tools"></div>
+        </aside>
+        <div id="toolDetail" class="min-h-72">
+          <!-- Selected tool content -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 8. RESOURCES SECTION ================= -->
+    <section id="resources" class="app-page space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Digital Knowledge Hub</h2>
+          <p class="text-xs text-slate-500">Datasets, cheatsheets, research papers, and curated links.</p>
+        </div>
+        <button onclick="openModal('addResourceModal')" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
+          <i class="fa-solid fa-plus"></i><span>Add Resource</span>
+        </button>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="flex space-x-2 overflow-x-auto pb-2 custom-scrollbar">
+        <button onclick="filterResources('All', this)" class="res-tab bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">All</button>
+        <button onclick="filterResources('Datasets', this)" class="res-tab bg-white text-slate-600 border border-slate-200 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-medium transition">Datasets</button>
+        <button onclick="filterResources('Cheatsheets', this)" class="res-tab bg-white text-slate-600 border border-slate-200 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-medium transition">Cheatsheets</button>
+        <button onclick="filterResources('Papers', this)" class="res-tab bg-white text-slate-600 border border-slate-200 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-medium transition">Research Papers</button>
+        <button onclick="filterResources('Links', this)" class="res-tab bg-white text-slate-600 border border-slate-200 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-medium transition">External Links</button>
+        <button onclick="filterResources('Tutorials', this)" class="res-tab bg-white text-slate-600 border border-slate-200 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-medium transition">Videos & Tutorials</button>
+      </div>
+
+      <div id="resourcesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered Resources Dynamic -->
+      </div>
+    </section>
+
+    <!-- ================= 9. PROFILE & CONTACT SECTION ================= -->
+    <section id="profile" class="app-page bg-white border border-[#1E3A5F]/20 100 rounded-3xl p-6 sm:p-8 shadow-sm">
+      <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 pb-6 border-b border-slate-100">
+        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
+          <img id="profileAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Student Profile" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-sky-100 shadow-md"/>
+          <div>
+            <h2 id="profName" class="text-2xl font-bold text-slate-900">Alex Rivera</h2>
+            <p id="profRegNo" class="text-sm font-mono text-[#1E3A5F] font-semibold mb-2">Registration No: DS-2024-8841</p>
+            <div class="flex flex-wrap justify-center sm:justify-start gap-2">
+              <span id="profDept" class="px-2.5 py-1 bg-sky-50 text-[#1E3A5F] text-[11px] font-medium rounded-lg">Dept. of Data Science</span>
+              <span id="profSec" class="px-2.5 py-1 bg-slate-100 text-slate-700 text-[11px] font-medium rounded-lg">Section: B</span>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="openEditProfile()" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm flex items-center space-x-2 transition">
+          <i class="fa-solid fa-user-pen"></i><span>Edit Profile</span>
+        </button>
+      </div>
+
+      <!-- Detail Grid & Contact Bar -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+        <div class="space-y-3 text-xs">
+          <p><strong class="text-slate-500">Current Subject / Focus:</strong> <span id="profSubject" class="text-slate-800 font-medium">Advanced Neural Networks & Analytics</span></p>
+          <p><strong class="text-slate-500">Faculty Supervisor:</strong> <span id="profSupervisor" class="text-slate-800 font-medium">Dr. Eleanor Vance, Ph.D.</span></p>
+        </div>
+
+        <div class="flex items-center justify-start md:justify-end space-x-3">
+          <a id="linkGithub" href="https://github.com" target="_blank" class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center hover:bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] transition shadow-sm"><i class="fa-brands fa-github text-base"></i></a>
+          <a id="linkLinkedin" href="https://linkedin.com" target="_blank" class="w-10 h-10 rounded-xl bg-sky-700 text-white flex items-center justify-center hover:bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] transition shadow-sm"><i class="fa-brands fa-linkedin-in text-base"></i></a>
+          <a id="linkEmail" href="mailto:alex.rivera@university.edu" class="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition shadow-sm"><i class="fa-solid fa-envelope text-base"></i></a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FLOATING BOTTOM NAVIGATION BAR ================= -->
+  <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass-nav rounded-full px-3 py-2 border border-[#1E3A5F]/20 100 max-w-[95vw] sm:max-w-max">
+    <ul class="flex items-center space-x-1 sm:space-x-2 text-[11px] font-medium">
+      <li><a href="#home" class="nav-btn active bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white px-3 py-2 rounded-full flex items-center space-x-1.5 transition"><i class="fa-solid fa-house"></i><span class="hidden md:inline">Home</span></a></li>
+      <li><a href="#modules" class="nav-btn text-slate-600 hover:text-[#1E3A5F] hover:bg-sky-50 px-3 py-2 rounded-full flex items-center space-x-1.5 transition"><i class="fa-solid fa-book"></i><span class="hidden md:inline">Modules</span></a></li>
+      <li><a href="#labs" class="nav-btn text-slate-600 hover:text-[#1E3A5F] hover:bg-sky-50 px-3 py-2 rounded-full flex items-center space-x-1.5 transition"><i class="fa-solid fa-flask"></i><span class="hidden md:inline">Labs</span></a></li>
+      <li><a href="#assignments" class="nav-btn text-slate-600 hover:text-[#1E3A5F] hover:bg-sky-50 px-3 py-2 rounded-full flex items-center space-x-1.5 transition"><i class="fa-solid fa-file-signature"></i><span class="hidden md:inline">Assignments</span></a></li>
+      <li><a href="#projects" class="nav-btn text-slate-600 hover:text-[#1E3A5F] hover:bg-sky-50 px-3 py-2 rounded-full flex items-center space-x-1.5 transition"><i class="fa-solid fa-code-branch"></i><span class="hidden md:inline">Projects</span></a></li>
+      <li><a href="#tools" class="nav-btn text-slate-600 hover:text-[#1E3A5F] hover:bg-sky-50 px-3 py-2 rounded-full flex items-center space-x-1.5 transition"><i class="fa-solid fa-toolbox"></i><span class="hidden md:inline">Tools</span></a></li>
+      <li><a href="#resources" class="nav-btn text-slate-600 hover:text-[#1E3A5F] hover:bg-sky-50 px-3 py-2 rounded-full flex items-center space-x-1.5 transition"><i class="fa-solid fa-folder-open"></i><span class="hidden md:inline">Resources</span></a></li>
+      <li><a href="#profile" class="nav-btn text-slate-600 hover:text-[#1E3A5F] hover:bg-sky-50 px-3 py-2 rounded-full flex items-center space-x-1.5 transition"><i class="fa-solid fa-user"></i><span class="hidden md:inline">Profile</span></a></li>
+    </ul>
+  </nav>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- Add Module Modal -->
+  <div id="addModuleModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#1E3A5F]/20 100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="moduleModalTitle" class="text-sm font-bold text-slate-900">Add New Module</h3>
+        <button onclick="closeModal('addModuleModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveModule(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium mb-1">Module Title</label>
+          <input type="text" id="mTitle" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="e.g. Data Structures & Algorithms"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Module Code</label>
+          <input type="text" id="mCode" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="e.g. DS-301"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Instructor Name</label>
+          <input type="text" id="mInstructor" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="e.g. Prof. Alan Turing"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Description</label>
+          <textarea id="mDesc" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="Brief subject summary..."></textarea>
+        </div>
+        <input type="hidden" id="mEditIndex" value=""/>
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('addModuleModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
+          <button type="submit" id="moduleSubmitLabel" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Module</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Lab Modal -->
+  <div id="addLabModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#1E3A5F]/20 100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-900">Add Lab Experiment</h3>
+        <button onclick="closeModal('addLabModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveLab(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium mb-1">Experiment Title</label>
+          <input type="text" id="lTitle" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Status</label>
+          <select id="lStatus" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500">
+            <option value="Completed">Completed</option>
+            <option value="In Review">In Review</option>
+            <option value="Pending">Pending</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Code Snippet / Notes</label>
+          <textarea id="lCode" rows="3" class="w-full px-3 py-2 font-mono text-[11px] bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="# Write Python/SQL snippet here..."></textarea>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">GitHub Repo Link</label>
+          <input type="url" id="lGithub" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="https://github.com/..."/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Upload Lab File (PDF/Code/Image)</label>
+          <input type="file" id="lFile" class="w-full text-slate-500 text-xs"/>
+        </div>
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('addLabModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Experiment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Assignment Modal -->
+  <div id="addAssignmentModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#1E3A5F]/20 100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-900">Add Academic Assignment</h3>
+        <button onclick="closeModal('addAssignmentModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveAssignment(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium mb-1">Assignment Title</label>
+          <input type="text" id="aTitle" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium mb-1">Due Date</label>
+            <input type="date" id="aDueDate" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+          </div>
+          <div>
+            <label class="block font-medium mb-1">Priority</label>
+            <select id="aPriority" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500">
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Status</label>
+          <select id="aStatus" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500">
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Submitted">Submitted</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Upload Solution/File</label>
+          <input type="file" id="aFile" class="w-full text-slate-500 text-xs"/>
+        </div>
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('addAssignmentModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Assignment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Project Modal -->
+  <div id="addProjectModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#1E3A5F]/20 100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-900">Add Portfolio Project</h3>
+        <button onclick="closeModal('addProjectModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveProject(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium mb-1">Project Title</label>
+          <input type="text" id="pTitle" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Summary</label>
+          <textarea id="pSummary" rows="2" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"></textarea>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Technologies (comma separated)</label>
+          <input type="text" id="pTech" placeholder="Python, Pandas, PyTorch" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">GitHub Repo URL</label>
+          <input type="url" id="pGithub" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Live Demo URL</label>
+          <input type="url" id="pDemo" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Upload Demo/PDF Attachment</label>
+          <input type="file" id="pFile" class="w-full text-slate-500 text-xs"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Project folder</label>
+          <input type="file" id="pFolder" webkitdirectory directory multiple class="w-full text-slate-500 text-xs"/>
+          <p class="text-[10px] text-slate-500 mt-1">Choose a folder to store its files in this browser. Files are kept in your browser, not uploaded to a server.</p>
+        </div>
+        <input type="hidden" id="pEditIndex" value=""/>
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('addProjectModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Tool Modal -->
+  <div id="addToolModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#1E3A5F]/20 100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-900">Add Toolstack Item</h3>
+        <button onclick="closeModal('addToolModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveTool(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium mb-1">Tool Name</label>
+          <input type="text" id="tName" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="e.g. Jupyter Notebook"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Category</label>
+          <input type="text" id="tCat" placeholder="e.g. IDE / Visualization" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Launcher / Direct URL</label>
+          <input type="url" id="tUrl" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Usage Notes</label>
+          <input type="text" id="tNotes" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="e.g. Used for exploratory data analysis."/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">YouTube learning link or search phrase</label>
+          <input type="text" id="tTutorial" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="e.g. https://youtu.be/... or pandas beginner tutorial"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Attach PDF, PPT, or tool guide (optional)</label>
+          <input type="file" id="tFile" accept=".pdf,.ppt,.pptx,.txt,.md,.csv,.doc,.docx" class="w-full text-slate-500 text-xs"/>
+        </div>
+        <input type="hidden" id="tEditIndex" value=""/>
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('addToolModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Tool</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Resource Modal -->
+  <div id="addResourceModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#1E3A5F]/20 100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-900">Add Resource Item</h3>
+        <button onclick="closeModal('addResourceModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveResource(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium mb-1">Title</label>
+          <input type="text" id="rTitle" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Category</label>
+          <select id="rCat" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500">
+            <option value="Datasets">Datasets</option>
+            <option value="Cheatsheets">Cheatsheets</option>
+            <option value="Papers">Research Papers</option>
+            <option value="Links">External Links</option>
+            <option value="Tutorials">Videos & Tutorials</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">External Link URL (Optional)</label>
+          <input type="url" id="rUrl" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Upload Document/File (Optional)</label>
+          <input type="file" id="rFile" class="w-full text-slate-500 text-xs"/>
+        </div>
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('addResourceModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Resource</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div id="editProfileModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#1E3A5F]/20 100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-900">Edit Academic Profile</h3>
+        <button onclick="closeModal('editProfileModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveProfile(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium mb-1">Full Name</label>
+          <input type="text" id="epName" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Registration Number</label>
+          <input type="text" id="epRegNo" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Department</label>
+          <input type="text" id="epDept" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium mb-1">Section</label>
+            <input type="text" id="epSec" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+          </div>
+          <div>
+            <label class="block font-medium mb-1">Subject Focus</label>
+            <input type="text" id="epSubject" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+          </div>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Faculty Supervisor</label>
+          <input type="text" id="epSupervisor" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">GitHub Profile Link</label>
+          <input type="url" id="epGithub" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">LinkedIn Profile Link</label>
+          <input type="url" id="epLinkedin" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Email Address</label>
+          <input type="email" id="epEmail" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Upload New Avatar Photo</label>
+          <input type="file" id="epAvatarFile" accept="image/*" class="w-full text-slate-500 text-xs"/>
+        </div>
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('editProfileModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Upload Module Doc Modal -->
+  <div id="uploadModuleDocModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#1E3A5F]/20 100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-900">Upload Module Document</h3>
+        <button onclick="closeModal('uploadModuleDocModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveModuleDoc(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="targetModuleId"/>
+        <div>
+          <label class="block font-medium mb-1">Document Name</label>
+          <input type="text" id="mdName" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500" placeholder="e.g. Lecture 1 Notes"/>
+        </div>
+        <div>
+          <label class="block font-medium mb-1">Select File (PDF, DOCX, Code)</label>
+          <input type="file" id="mdFile" required class="w-full text-slate-500 text-xs"/>
+        </div>
+        <div class="pt-2 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('uploadModuleDocModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="pdfViewerModal" class="fixed inset-0 bg-slate-900/70 z-[60] hidden items-center justify-center p-3 sm:p-6">
+    <div class="bg-white rounded-2xl w-full max-w-7xl h-[98vh] p-3 sm:p-5 shadow-xl flex flex-col">
+      <div class="flex items-center justify-between pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">PDF Flipbook</h3>
+          <p class="mt-1 text-[11px] text-slate-500">Press and drag either page toward the spine to turn it, like a real book.</p>
+        </div>
+        <button type="button" onclick="closeModal('pdfViewerModal')" class="text-slate-500 hover:text-slate-900" aria-label="Close PDF preview"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    <p id="pdfViewerStatus" class="hidden text-xs text-slate-600 pb-2" role="status"></p>
+      <div id="pdfViewerStage" tabindex="0" role="group" aria-label="PDF book spread. Press and drag either page toward the spine to flip it. Release to complete or cancel the turn." onpointerdown="startPdfPageDrag(event)" onpointermove="movePdfPageDrag(event)" onpointerup="finishPdfPageDrag(event)" onpointercancel="cancelPdfPageDrag(event)" onkeydown="handlePdfPageKeydown(event)" class="w-full flex-1 min-h-0 overflow-auto bg-[#e5dccb] rounded-lg p-3 sm:p-5 flex items-start justify-start">
+        <div id="pdfViewerContent"></div>
+      </div>
+      <div id="pdfPageControls" class="hidden flex-wrap items-center justify-center gap-3 pt-3">
+        <button id="pdfPreviousPage" type="button" onclick="turnPdfPage(-1)" class="px-3 py-2 rounded-lg bg-[#FFF2BA]/20 text-[#1E3A5F] text-xs font-semibold hover:bg-sky-200"><i class="fa-solid fa-chevron-left mr-1"></i>Previous</button>
+        <span id="pdfPageNumber" class="text-xs font-medium text-slate-600"></span>
+        <button id="pdfNextPage" type="button" onclick="turnPdfPage(1)" class="px-3 py-2 rounded-lg bg-[#FFF2BA]/20 text-[#1E3A5F] text-xs font-semibold hover:bg-sky-200">Next<i class="fa-solid fa-chevron-right ml-1"></i></button>
+      </div>
+      <a id="pdfViewerDownload" class="hidden mt-3 text-center text-xs font-semibold text-[#1E3A5F] hover:text-[#1E3A5F]">Download PDF instead</a>
+    </div>
+  </div>
+
+  <div id="idEditorModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Edit & Crop ID Card</h3>
+          <p class="mt-1 text-xs text-slate-500">Adjust zoom, position, and crop frame. Preview or save your changes.</p>
+        </div>
+        <button type="button" onclick="closeModal('idEditorModal')" aria-label="Close ID card editor" class="text-slate-500 hover:text-slate-900 text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="id-crop-frame border-2 border-slate-300 bg-gradient-to-br from-slate-100 to-slate-50">
+        <img id="idEditorImage" alt="ID card crop preview"/>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-xs">
+        <label class="space-y-1.5 p-3 bg-slate-50 rounded-lg">
+          <span class="font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass text-[#1E3A5F]"></i>Zoom</span>
+          <input id="idZoom" type="range" min="1" max="3" step="0.05" value="1" oninput="updateIdCropPreview()" class="w-full accent-[#1E3A5F]"/>
+          <span class="text-slate-500" id="zoomLevel">100%</span>
+        </label>
+        <label class="space-y-1.5 p-3 bg-slate-50 rounded-lg">
+          <span class="font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-arrows-left-right text-[#1E3A5F]"></i>Horizontal</span>
+          <input id="idCropX" type="range" min="0" max="100" step="1" value="50" oninput="updateIdCropPreview()" class="w-full accent-[#1E3A5F]"/>
+          <span class="text-slate-500" id="xLevel">50%</span>
+        </label>
+        <label class="space-y-1.5 p-3 bg-slate-50 rounded-lg">
+          <span class="font-semibold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-arrows-up-down text-[#1E3A5F]"></i>Vertical</span>
+          <input id="idCropY" type="range" min="0" max="100" step="1" value="50" oninput="updateIdCropPreview()" class="w-full accent-[#1E3A5F]"/>
+          <span class="text-slate-500" id="yLevel">50%</span>
+        </label>
+      </div>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" onclick="closeModal('idEditorModal')" class="px-4 py-2.5 rounded-lg border-2 border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">Cancel</button>
+        <button type="button" onclick="saveIdCrop()" class="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white text-xs font-semibold shadow-md hover:shadow-lg transition"><i class="fa-solid fa-check mr-1.5"></i>Save Crop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT APP LOGIC ================= -->
+  <script>
+    const defaultModules = [
+      { title: 'Data Science Skills, Tools and Data Analysis', code: 'Module 1', instructor: '', desc: 'Build core data science foundations, tools, and analysis workflows.', docs: [] },
+      { title: 'Data Extraction', code: 'Module 2', instructor: '', desc: 'Learn how to gather, clean, and prepare raw data for analysis.', docs: [] },
+      { title: 'Data Visualization', code: 'Module 3', instructor: '', desc: 'Present insights through effective charts, dashboards, and storytelling.', docs: [] },
+      { title: 'Statistical Thinking', code: 'Module 4', instructor: '', desc: 'Apply statistical reasoning to interpret patterns, uncertainty, and evidence.', docs: [] },
+      { title: 'Dimensionality Reduction', code: 'Module 5', instructor: '', desc: 'Reduce feature complexity while preserving the most useful information.', docs: [] }
+    ];
+
+    // App State Management via LocalStorage
+    let state = {
+      profile: {
+        name: 'Alex Rivera',
+        regNo: 'DS-2024-8841',
+        dept: 'Dept. of Data Science',
+        section: 'B',
+        subject: 'Advanced Neural Networks & Analytics',
+        supervisor: 'Dr. Eleanor Vance, Ph.D.',
+        github: 'https://github.com',
+        linkedin: 'https://linkedin.com',
+        email: 'alex.rivera@university.edu',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+        logo: 'https://via.placeholder.com/40/4D0E13/FFFFFF?text=DS'
+      },
+      modules: defaultModules.map(module => ({ ...module, docs: module.docs || [] })),
+      labs: [],
+      assignments: [],
+      projects: [],
+      tools: [
+        { name: 'Python', category: 'Programming', url: 'https://www.python.org/', notes: 'Core language for scripting, analysis, automation, and machine learning.', tutorial: 'Python for data science beginner tutorial' },
+        { name: 'Jupyter Notebook', category: 'Notebooks', url: 'https://jupyter.org/', notes: 'Interactive notebooks combine executable code, visualizations, and notes.', tutorial: 'Jupyter Notebook data science tutorial' },
+        { name: 'NumPy', category: 'Numerical computing', url: 'https://numpy.org/', notes: 'Fast arrays, vectorized operations, linear algebra, and scientific computing.', tutorial: 'NumPy tutorial for beginners' },
+        { name: 'pandas', category: 'Data analysis', url: 'https://pandas.pydata.org/', notes: 'Load, clean, join, reshape, and analyze tabular datasets.', tutorial: 'pandas data analysis tutorial' },
+        { name: 'Matplotlib & Seaborn', category: 'Visualization', url: 'https://seaborn.pydata.org/', notes: 'Create statistical plots, charts, and exploratory data visualizations.', tutorial: 'Matplotlib Seaborn visualization tutorial' },
+        { name: 'SQL', category: 'Databases', url: 'https://www.postgresql.org/', notes: 'Query, join, aggregate, and transform data stored in relational databases.', tutorial: 'SQL for data science full course' },
+        { name: 'scikit-learn', category: 'Machine learning', url: 'https://scikit-learn.org/', notes: 'Classical machine learning, preprocessing, model selection, and evaluation.', tutorial: 'scikit learn machine learning tutorial' },
+        { name: 'TensorFlow & Keras', category: 'Deep learning', url: 'https://www.tensorflow.org/', notes: 'Build, train, and deploy neural networks and deep-learning models.', tutorial: 'TensorFlow Keras deep learning tutorial' },
+        { name: 'PyTorch', category: 'Deep learning', url: 'https://pytorch.org/', notes: 'Flexible tensor computing and neural-network training for research and production.', tutorial: 'PyTorch deep learning tutorial beginners' },
+        { name: 'R & RStudio', category: 'Statistics', url: 'https://posit.co/download/rstudio-desktop/', notes: 'Statistical computing, reproducible reports, and data visualization.', tutorial: 'R programming for data science tutorial' },
+        { name: 'Git & GitHub', category: 'Version control', url: 'https://github.com/', notes: 'Track code changes, collaborate, and publish reproducible projects.', tutorial: 'Git GitHub for data science beginners' },
+        { name: 'Power BI & Tableau', category: 'Business intelligence', url: 'https://powerbi.microsoft.com/', notes: 'Create interactive dashboards and communicate analytical insights.', tutorial: 'Power BI Tableau dashboard tutorial' },
+        { name: 'Apache Spark', category: 'Big data', url: 'https://spark.apache.org/', notes: 'Distributed processing for large-scale data engineering and machine learning.', tutorial: 'Apache Spark PySpark data engineering tutorial' },
+        { name: 'Hugging Face', category: 'Generative AI', url: 'https://huggingface.co/', notes: 'Explore pretrained transformer models, datasets, and modern AI workflows.', tutorial: 'Hugging Face transformers tutorial' },
+        { name: 'SciPy', category: 'Scientific computing', url: 'https://scipy.org/', notes: 'Use optimization, statistics, signal processing, and scientific algorithms with Python.', tutorial: 'SciPy scientific computing tutorial' },
+        { name: 'Statsmodels', category: 'Statistics', url: 'https://www.statsmodels.org/', notes: 'Fit statistical models and inspect regression, time-series, and hypothesis-test results.', tutorial: 'Python statsmodels regression tutorial' },
+        { name: 'Plotly', category: 'Visualization', url: 'https://plotly.com/python/', notes: 'Build interactive charts and data applications for notebooks and the web.', tutorial: 'Plotly Python interactive visualization tutorial' },
+        { name: 'XGBoost', category: 'Machine learning', url: 'https://xgboost.readthedocs.io/', notes: 'Train efficient gradient-boosted tree models for structured prediction tasks.', tutorial: 'XGBoost machine learning tutorial' },
+        { name: 'LightGBM & CatBoost', category: 'Machine learning', url: 'https://lightgbm.readthedocs.io/', notes: 'Use fast gradient boosting libraries for tabular data and categorical features.', tutorial: 'LightGBM CatBoost tutorial for tabular data' },
+        { name: 'OpenCV', category: 'Computer vision', url: 'https://opencv.org/', notes: 'Load, transform, and analyze images and video for computer-vision workflows.', tutorial: 'OpenCV Python computer vision tutorial' },
+        { name: 'spaCy', category: 'Natural language processing', url: 'https://spacy.io/', notes: 'Process text with tokenization, named entities, linguistic pipelines, and models.', tutorial: 'spaCy natural language processing tutorial' },
+        { name: 'Kaggle', category: 'Datasets & competitions', url: 'https://www.kaggle.com/', notes: 'Find public datasets, practice notebooks, and join machine-learning competitions.', tutorial: 'Kaggle data science beginner tutorial' },
+        { name: 'Streamlit', category: 'Data apps', url: 'https://streamlit.io/', notes: 'Turn Python analyses and models into interactive data applications.', tutorial: 'Streamlit Python data science app tutorial' },
+        { name: 'MLflow', category: 'ML operations', url: 'https://mlflow.org/', notes: 'Track experiments and package, register, and deploy machine-learning models.', tutorial: 'MLflow experiment tracking tutorial' },
+        { name: 'DVC', category: 'Data version control', url: 'https://dvc.org/', notes: 'Version datasets and machine-learning pipelines alongside source code.', tutorial: 'DVC data version control tutorial' },
+        { name: 'Docker', category: 'Development & deployment', url: 'https://www.docker.com/', notes: 'Package applications and dependencies into reproducible containers.', tutorial: 'Docker for data science beginners' },
+        { name: 'Apache Airflow', category: 'Data engineering', url: 'https://airflow.apache.org/', notes: 'Schedule, monitor, and orchestrate repeatable data workflows.', tutorial: 'Apache Airflow data pipeline tutorial' },
+        { name: 'dbt', category: 'Data engineering', url: 'https://www.getdbt.com/', notes: 'Transform warehouse data with modular SQL models, tests, and documentation.', tutorial: 'dbt analytics engineering tutorial' },
+        { name: 'Apache Kafka', category: 'Data engineering', url: 'https://kafka.apache.org/', notes: 'Build event-streaming pipelines for continuous data ingestion and processing.', tutorial: 'Apache Kafka data engineering tutorial' },
+        { name: 'BigQuery & Snowflake', category: 'Cloud data platforms', url: 'https://cloud.google.com/bigquery', notes: 'Query and analyze large datasets in managed cloud data warehouses.', tutorial: 'BigQuery Snowflake data warehouse tutorial' },
+        { name: 'FastAPI', category: 'APIs & deployment', url: 'https://fastapi.tiangolo.com/', notes: 'Serve Python data products and machine-learning models through APIs.', tutorial: 'FastAPI machine learning model deployment tutorial' },
+        { name: 'GitHub Actions', category: 'Automation', url: 'https://github.com/features/actions', notes: 'Automate tests, checks, and repeatable workflows for analytics projects.', tutorial: 'GitHub Actions Python data science CI tutorial' },
+        { name: 'R Shiny', category: 'Data apps', url: 'https://shiny.posit.co/', notes: 'Create interactive web applications and dashboards using R.', tutorial: 'R Shiny data science dashboard tutorial' }
+      ],
+      toolCatalogVersion: 2,
+      resourceCatalogVersion: 1,
+      resources: [
+        { title: 'Kaggle Datasets', category: 'Datasets', url: 'https://www.kaggle.com/datasets' },
+        { title: 'UCI Machine Learning Repository', category: 'Datasets', url: 'https://archive.ics.uci.edu/' },
+        { title: 'Our World in Data', category: 'Datasets', url: 'https://ourworldindata.org/' },
+        { title: 'pandas Cheat Sheet', category: 'Cheatsheets', url: 'https://pandas.pydata.org/Pandas_Cheat_Sheet.pdf' },
+        { title: 'scikit-learn User Guide', category: 'Cheatsheets', url: 'https://scikit-learn.org/stable/user_guide.html' },
+        { title: 'Google Machine Learning Crash Course', category: 'Tutorials', url: 'https://developers.google.com/machine-learning/crash-course' },
+        { title: 'Jupyter Try It', category: 'Tutorials', url: 'https://jupyter.org/try' },
+        { title: 'Recent Machine Learning Papers (arXiv)', category: 'Papers', url: 'https://arxiv.org/list/cs.LG/recent' },
+        { title: 'Streamlit Data Apps', category: 'Links', url: 'https://streamlit.io/' }
+      ],
+      activities: [],
+      collegeId: null
+    };
+    let activeModuleIndex = 0;
+    let activeToolIndex = 0;
+    let idEditorMode = 'edit';
+
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadState();
+      renderAll();
+      renderActivePage();
+    });
+    window.addEventListener('hashchange', renderActivePage);
+
+    function openStateDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('digital-library', 1);
+        request.onupgradeneeded = () => request.result.createObjectStore('app', { keyPath: 'id' });
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function loadState() {
+      const defaults = state;
+      try {
+        const db = await openStateDatabase();
+        const saved = await new Promise((resolve, reject) => {
+          const request = db.transaction('app', 'readonly').objectStore('app').get('state');
+          request.onsuccess = () => resolve(request.result && request.result.value);
+          request.onerror = () => reject(request.error);
+        });
+        if (saved) {
+          state = { ...defaults, ...saved, profile: { ...defaults.profile, ...(saved.profile || {}) } };
+          if (!state.modules || !state.modules.length) {
+            state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
+          }
+          if ((saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion) {
+            const existingTools = new Set(state.tools.map(tool => tool.name.toLowerCase()));
+            state.tools.push(...defaults.tools.filter(tool => !existingTools.has(tool.name.toLowerCase())));
+            state.toolCatalogVersion = defaults.toolCatalogVersion;
+          }
+          if ((saved.resourceCatalogVersion || 0) < defaults.resourceCatalogVersion) {
+            const existingResources = new Set((state.resources || []).map(resource => resource.title.toLowerCase()));
+            state.resources = [...(state.resources || []), ...defaults.resources.filter(resource => !existingResources.has(resource.title.toLowerCase()))];
+            state.resourceCatalogVersion = defaults.resourceCatalogVersion;
+          }
+          if ((saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion || (saved.resourceCatalogVersion || 0) < defaults.resourceCatalogVersion) {
+            await persistState(db);
+          }
+        }
+        else {
+          const legacy = localStorage.getItem('ds_library_data');
+          if (legacy) {
+            const legacyState = JSON.parse(legacy);
+            state = { ...defaults, ...legacyState, profile: { ...defaults.profile, ...(legacyState.profile || {}) } };
+            if (!state.modules || !state.modules.length) {
+              state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
+            }
+            const existingTools = new Set(state.tools.map(tool => tool.name.toLowerCase()));
+            state.tools.push(...defaults.tools.filter(tool => !existingTools.has(tool.name.toLowerCase())));
+            state.toolCatalogVersion = defaults.toolCatalogVersion;
+            const existingResources = new Set((state.resources || []).map(resource => resource.title.toLowerCase()));
+            state.resources = [...(state.resources || []), ...defaults.resources.filter(resource => !existingResources.has(resource.title.toLowerCase()))];
+            state.resourceCatalogVersion = defaults.resourceCatalogVersion;
+            await persistState(db);
+            localStorage.removeItem('ds_library_data');
+          }
+        }
+        db.close();
+      } catch (error) {
+        console.error('Could not load saved library data:', error);
+        try {
+          const legacy = localStorage.getItem('ds_library_data');
+          if (legacy) {
+            const legacyState = JSON.parse(legacy);
+            state = { ...defaults, ...legacyState, profile: { ...defaults.profile, ...(legacyState.profile || {}) } };
+            if (!state.modules || !state.modules.length) {
+              state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
+            }
+          }
+        } catch (fallbackError) {
+          console.error('Could not load legacy library data:', fallbackError);
+          alert('Your saved library data could not be loaded. Check browser storage permissions.');
+        }
+      }
+    }
+
+    function persistState(db) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('app', 'readwrite');
+        tx.objectStore('app').put({ id: 'state', value: state });
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error || new Error('The browser cancelled saving your data.'));
+      });
+    }
+
+    async function saveState() {
+      let db;
+      try {
+        if ('indexedDB' in window) {
+          db = await openStateDatabase();
+          await persistState(db);
+        } else {
+          localStorage.setItem('ds_library_data', JSON.stringify(state));
+        }
+        renderAll();
+        return true;
+      } catch (error) {
+        console.error('Could not save library data:', error);
+        alert('Could not save your changes in browser storage. Your browser may be out of space; try smaller files or free up storage.');
+        return false;
+      } finally {
+        if (db) db.close();
+      }
+    }
+
+    function logActivity(text) {
+      const entry = {
+        id: Date.now(),
+        text: text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      state.activities.unshift(entry);
+      if(state.activities.length > 15) state.activities.pop();
+    }
+
+    function clearActivity() {
+      state.activities = [];
+      saveState();
+    }
+
+    // Modal Handlers
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function openEditProfile() {
+      const profile = state.profile;
+      document.getElementById('epName').value = profile.name || '';
+      document.getElementById('epRegNo').value = profile.regNo || '';
+      document.getElementById('epDept').value = profile.dept || '';
+      document.getElementById('epSec').value = profile.section || '';
+      document.getElementById('epSubject').value = profile.subject || '';
+      document.getElementById('epSupervisor').value = profile.supervisor || '';
+      document.getElementById('epGithub').value = profile.github || '';
+      document.getElementById('epLinkedin').value = profile.linkedin || '';
+      document.getElementById('epEmail').value = profile.email || '';
+      document.getElementById('epAvatarFile').value = '';
+      openModal('editProfileModal');
+    }
+
+    function closeModal(id) {
+      if (id === 'pdfViewerModal') {
+        pdfRenderSequence += 1;
+        pdfPointerGesture = null;
+        document.getElementById('pdfViewerStage').classList.remove('pdf-page-dragging');
+        document.getElementById('pdfViewerContent').replaceChildren();
+        document.getElementById('pdfViewerStatus').classList.add('hidden');
+        document.getElementById('pdfViewerDownload').classList.add('hidden');
+        document.getElementById('pdfPageControls').classList.add('hidden');
+        activePdfDocument = null;
+      }
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[char]));
+    }
+
+    function getSafeExternalUrl(value) {
+      try {
+        const url = new URL(value);
+        return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+      } catch {
+        return '';
+      }
+    }
+
+    let pdfRenderSequence = 0;
+    let pdfPageRenderSequence = 0;
+    let activePdfDocument = null;
+    let activePdfPage = 1;
+    const pdfDisplayScale = 1.7;
+    let pdfPointerGesture = null;
+
+    function isPdfFile(file) {
+      return Boolean(file && (
+        (file.type && file.type.toLowerCase().includes('pdf')) ||
+        (file.name && file.name.toLowerCase().endsWith('.pdf')) ||
+        (file.relativePath && file.relativePath.toLowerCase().endsWith('.pdf')) ||
+        (typeof file.data === 'string' && file.data.startsWith('data:application/pdf;'))
+      ));
+    }
+
+    async function viewFile(file) {
+      if (!file || !file.data || !isPdfFile(file)) {
+        alert('Preview is available for PDF files. Download this file to open it.');
+        return;
+      }
+      const requestId = ++pdfRenderSequence;
+      const content = document.getElementById('pdfViewerContent');
+      const status = document.getElementById('pdfViewerStatus');
+      const download = document.getElementById('pdfViewerDownload');
+      const controls = document.getElementById('pdfPageControls');
+      content.replaceChildren();
+      pdfPointerGesture = null;
+      document.getElementById('pdfViewerStage').classList.remove('pdf-page-dragging');
+      controls.classList.add('hidden');
+      activePdfDocument = null;
+      status.textContent = 'Loading PDF preview...';
+      status.classList.remove('hidden');
+      download.href = file.data;
+      download.download = file.name || 'document.pdf';
+      download.classList.remove('hidden');
+      const modal = document.getElementById('pdfViewerModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      try {
+        if (!window.pdfjsLib) throw new Error('The PDF viewer library did not load. Use the download link instead.');
+        const encodedData = file.data.includes(',') ? file.data.slice(file.data.indexOf(',') + 1) : file.data;
+        const binary = atob(encodedData);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+        if (requestId !== pdfRenderSequence) return;
+        activePdfDocument = pdf;
+        activePdfPage = 1;
+        status.textContent = file.name || 'PDF document';
+        controls.classList.remove('hidden');
+        controls.classList.add('flex');
+        await renderPdfPage(requestId, false);
+      } catch (error) {
+        if (requestId !== pdfRenderSequence) return;
+        console.error('Could not render PDF preview:', error);
+        content.replaceChildren();
+        status.textContent = `Could not display this PDF preview. ${error.message || 'The file may be invalid or damaged.'}`;
+      }
+    }
+
+    async function renderPdfCanvas(pageNumber, requestId) {
+      if (pageNumber > activePdfDocument.numPages || pageNumber < 1) return null;
+      const stage = document.getElementById('pdfViewerStage');
+      const page = await activePdfDocument.getPage(pageNumber);
+      if (requestId !== pdfRenderSequence) return null;
+      const baseViewport = page.getViewport({ scale: 1 });
+      const scale = Math.min(
+        (stage.clientWidth - 80) / (baseViewport.width * 2),
+        (stage.clientHeight - 40) / baseViewport.height,
+        2.4
+      ) * pdfDisplayScale;
+      const viewport = page.getViewport({ scale: Math.max(scale, 0.1) });
+      const canvas = document.createElement('canvas');
+      const outputScale = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
+      canvas.width = Math.ceil(viewport.width * outputScale);
+      canvas.height = Math.ceil(viewport.height * outputScale);
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
+      await page.render({
+        canvasContext: canvas.getContext('2d'),
+        viewport,
+        transform: [outputScale, 0, 0, outputScale, 0, 0]
+      }).promise;
+      return requestId === pdfRenderSequence ? canvas : null;
+    }
+
+    function createBlankPdfCanvas(referenceCanvas) {
+      const canvas = referenceCanvas.cloneNode(false);
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      return canvas;
+    }
+
+    function clonePdfCanvas(source) {
+      const clone = source.cloneNode(false);
+      clone.getContext('2d').drawImage(source, 0, 0);
+      return clone;
+    }
+
+    function clonePdfSpread(source) {
+      const spread = source.cloneNode(false);
+      for (const sourcePage of source.querySelectorAll('.pdf-spread-page')) {
+        const page = sourcePage.cloneNode(false);
+        page.append(clonePdfCanvas(sourcePage.querySelector('canvas')));
+        spread.append(page);
+      }
+      return spread;
+    }
+
+    async function renderPdfSpread(firstPage, requestId) {
+      let [leftCanvas, rightCanvas] = await Promise.all([
+        renderPdfCanvas(firstPage, requestId),
+        renderPdfCanvas(firstPage + 1, requestId)
+      ]);
+      if (requestId !== pdfRenderSequence) return null;
+      if (!rightCanvas && leftCanvas && firstPage + 1 > activePdfDocument.numPages) {
+        rightCanvas = createBlankPdfCanvas(leftCanvas);
+      }
+      if (!leftCanvas || !rightCanvas) return null;
+      const spread = document.createElement('div');
+      spread.className = 'pdf-spread';
+      const leftWidth = parseFloat(leftCanvas.style.width);
+      const rightWidth = parseFloat(rightCanvas.style.width);
+      const leftHeight = parseFloat(leftCanvas.style.height);
+      const rightHeight = parseFloat(rightCanvas.style.height);
+      spread.style.width = `${leftWidth + rightWidth}px`;
+      spread.style.height = `${Math.max(leftHeight, rightHeight)}px`;
+      for (const [side, pageNumber, canvas] of [
+        ['left', firstPage, leftCanvas],
+        ['right', firstPage + 1, rightCanvas]
+      ]) {
+        const page = document.createElement('div');
+        page.className = `pdf-spread-page pdf-spread-page-${side}${pageNumber > activePdfDocument.numPages ? ' pdf-spread-page-empty' : ''}`;
+        page.dataset.side = side;
+        page.dataset.pageNumber = String(pageNumber);
+        page.append(canvas);
+        spread.append(page);
+      }
+      return spread;
+    }
+
+    function updatePdfPageStatus() {
+      document.getElementById('pdfViewerStatus').textContent = `${activePdfDocument.numPages} page${activePdfDocument.numPages === 1 ? '' : 's'}`;
+      const lastPage = Math.min(activePdfPage + 1, activePdfDocument.numPages);
+      document.getElementById('pdfPageNumber').textContent = activePdfPage === lastPage
+        ? `Page ${activePdfPage} of ${activePdfDocument.numPages}`
+        : `Pages ${activePdfPage}-${lastPage} of ${activePdfDocument.numPages}`;
+      const previous = document.getElementById('pdfPreviousPage');
+      const next = document.getElementById('pdfNextPage');
+      previous.disabled = activePdfPage === 1;
+      next.disabled = activePdfPage + 2 > activePdfDocument.numPages;
+      previous.classList.toggle('opacity-40', previous.disabled);
+      next.classList.toggle('opacity-40', next.disabled);
+    }
+
+    async function renderPdfPage(requestId) {
+      if (!activePdfDocument || requestId !== pdfRenderSequence) return;
+      const renderId = ++pdfPageRenderSequence;
+      const content = document.getElementById('pdfViewerContent');
+      const spread = await renderPdfSpread(activePdfPage, requestId);
+      if (!spread || requestId !== pdfRenderSequence || renderId !== pdfPageRenderSequence) return;
+      content.replaceChildren(spread);
+      updatePdfPageStatus();
+    }
+
+    function turnPdfPage(direction) {
+      if (!activePdfDocument) return;
+      const nextPage = activePdfPage + direction * 2;
+      if (nextPage < 1 || nextPage > activePdfDocument.numPages) return;
+      activePdfPage = nextPage;
+      renderPdfPage(pdfRenderSequence).catch(error => {
+        console.error('Could not turn PDF page:', error);
+        document.getElementById('pdfViewerStatus').textContent = `Could not render this page. ${error.message || ''}`;
+      });
+    }
+
+    function startPdfPageDrag(event) {
+      const page = event.target.closest('.pdf-spread-page');
+      if (!activePdfDocument || !page || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      const direction = page.dataset.side === 'right' ? 1 : -1;
+      pdfPointerGesture = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        currentX: event.clientX,
+        page,
+        pageWidth: page.clientWidth,
+        pageHeight: page.clientHeight,
+        spreadWidth: page.parentElement.clientWidth,
+        spreadHeight: page.parentElement.clientHeight,
+        originalSpread: page.parentElement,
+        side: page.dataset.side,
+        requestId: pdfRenderSequence,
+        direction,
+        sheet: null,
+        book: null,
+        preparation: null,
+        released: false,
+        cancelled: false
+      };
+      if (activePdfPage + direction * 2 < 1 ||
+          activePdfPage + direction * 2 > activePdfDocument.numPages) {
+        pdfPointerGesture = null;
+        return;
+      }
+      createPdfPageFold(pdfPointerGesture);
+      const gesture = pdfPointerGesture;
+      gesture.preparation = preparePdfPageFold(gesture).catch(error => {
+        gesture.preparationFailed = true;
+        console.error('Could not prepare PDF page turn:', error);
+        document.getElementById('pdfViewerStatus').textContent = `Could not turn this page. ${error.message || ''}`;
+      });
+      document.getElementById('pdfViewerStage').classList.add('pdf-page-dragging');
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+
+    function updatePdfPageFold(gesture) {
+      if (!gesture.sheet || !gesture.direction) return;
+      const deltaX = gesture.currentX - gesture.startX;
+      const pullDistance = Math.max(0, gesture.direction > 0 ? -deltaX : deltaX);
+      const progress = Math.min(pullDistance / Math.max(gesture.pageWidth, 1), 1);
+      const angle = progress * 180 * (gesture.direction > 0 ? -1 : 1);
+      gesture.sheet.style.transform = `rotateY(${angle}deg)`;
+      gesture.sheet.style.setProperty('--fold-opacity', String(progress));
+      gesture.sheet.style.boxShadow = `${gesture.direction > 0 ? '-' : ''}${Math.round(progress * 20)}px 6px 22px rgba(40, 30, 20, ${progress * 0.35})`;
+    }
+
+    function createPdfPageFold(gesture) {
+      const book = document.createElement('div');
+      book.className = 'pdf-book';
+      book.style.width = `${gesture.spreadWidth}px`;
+      book.style.height = `${gesture.spreadHeight}px`;
+      const underlay = document.createElement('div');
+      underlay.className = 'pdf-book-underlay';
+      underlay.append(clonePdfSpread(gesture.originalSpread));
+      const isForward = gesture.direction > 0;
+      const otherSide = isForward ? 'left' : 'right';
+      const staticPage = document.createElement('div');
+      staticPage.className = `pdf-book-static-page pdf-book-static-${otherSide}`;
+      staticPage.style.width = `${gesture.pageWidth}px`;
+      staticPage.style.height = `${gesture.pageHeight}px`;
+      staticPage.append(clonePdfCanvas(
+        gesture.originalSpread.querySelector(`.pdf-spread-page-${otherSide} canvas`)
+      ));
+      const sheet = document.createElement('div');
+      sheet.className = 'pdf-turn-sheet';
+      sheet.style.width = `${gesture.pageWidth}px`;
+      sheet.style.height = `${gesture.pageHeight}px`;
+      sheet.style.top = '0';
+      sheet.style.bottom = '0';
+      sheet.style[isForward ? 'right' : 'left'] = '0';
+      sheet.style.transformOrigin = isForward ? 'left center' : 'right center';
+      const front = document.createElement('div');
+      front.className = 'pdf-turn-face pdf-turn-face-front';
+      front.append(clonePdfCanvas(gesture.page.querySelector('canvas')));
+      const back = document.createElement('div');
+      back.className = 'pdf-turn-face pdf-turn-face-back';
+      const blankBack = document.createElement('canvas');
+      blankBack.width = gesture.page.querySelector('canvas').width;
+      blankBack.height = gesture.page.querySelector('canvas').height;
+      back.append(blankBack);
+      sheet.append(front, back);
+      book.append(underlay, staticPage, sheet);
+      document.getElementById('pdfViewerContent').replaceChildren(book);
+      gesture.book = book;
+      gesture.sheet = sheet;
+      gesture.underlay = underlay;
+      gesture.backFace = back;
+      updatePdfPageFold(gesture);
+    }
+
+    async function preparePdfPageFold(gesture) {
+      const targetFirstPage = activePdfPage + gesture.direction * 2;
+      const targetSpread = await renderPdfSpread(targetFirstPage, gesture.requestId);
+      if (!targetSpread) return;
+      if ((pdfPointerGesture !== gesture && !gesture.released) ||
+          gesture.requestId !== pdfRenderSequence) return;
+      gesture.targetSpread = targetSpread;
+      const isForward = gesture.direction > 0;
+      const backSide = isForward ? 'left' : 'right';
+      const backCanvas = targetSpread.querySelector(`.pdf-spread-page-${backSide} canvas`);
+      gesture.underlay.replaceChildren(targetSpread);
+      gesture.backFace.replaceChildren(clonePdfCanvas(backCanvas));
+      updatePdfPageFold(gesture);
+    }
+
+    function movePdfPageDrag(event) {
+      const gesture = pdfPointerGesture;
+      if (!gesture || event.pointerId !== gesture.pointerId) return;
+      gesture.currentX = event.clientX;
+      const deltaX = gesture.currentX - gesture.startX;
+      const pullDistance = gesture.direction > 0 ? -deltaX : deltaX;
+      if (pullDistance < 0) {
+        gesture.sheet.style.transform = 'rotateY(0deg)';
+        gesture.sheet.style.setProperty('--fold-opacity', '0');
+        return;
+      }
+      event.preventDefault();
+      updatePdfPageFold(gesture);
+    }
+
+    async function finishPdfPageDrag(event) {
+      const gesture = pdfPointerGesture;
+      if (!gesture || event.pointerId !== gesture.pointerId) return;
+      gesture.currentX = event.clientX;
+      gesture.released = true;
+      pdfPointerGesture = null;
+      document.getElementById('pdfViewerStage').classList.remove('pdf-page-dragging');
+      if (gesture.preparation) await gesture.preparation;
+      if (gesture.requestId !== pdfRenderSequence || !activePdfDocument) return;
+      const deltaX = gesture.currentX - gesture.startX;
+      const threshold = Math.max(48, gesture.pageWidth * 0.16);
+      const pullDistance = gesture.direction > 0 ? -deltaX : deltaX;
+      const shouldTurn = !gesture.cancelled &&
+        gesture.direction &&
+        !gesture.preparationFailed &&
+        gesture.targetSpread &&
+        pullDistance >= threshold &&
+        activePdfPage + gesture.direction * 2 >= 1 &&
+        activePdfPage + gesture.direction * 2 <= activePdfDocument.numPages;
+
+      if (gesture.sheet) {
+        gesture.sheet.style.transition = 'transform 360ms cubic-bezier(.22,.61,.36,1), box-shadow 360ms ease';
+      }
+
+      if (shouldTurn && gesture.sheet) {
+        gesture.sheet.style.transform = `rotateY(${gesture.direction > 0 ? -180 : 180}deg)`;
+        await new Promise(resolve => window.setTimeout(resolve, 370));
+        if (gesture.requestId !== pdfRenderSequence || !activePdfDocument) return;
+        activePdfPage += gesture.direction * 2;
+        document.getElementById('pdfViewerContent').replaceChildren(gesture.targetSpread);
+        updatePdfPageStatus();
+        return;
+      }
+
+      if (gesture.sheet) {
+        gesture.sheet.style.transform = 'rotateY(0deg)';
+        gesture.sheet.style.setProperty('--fold-opacity', '0');
+        await new Promise(resolve => window.setTimeout(resolve, 370));
+        if (gesture.requestId === pdfRenderSequence && gesture.book?.isConnected) {
+          document.getElementById('pdfViewerContent').replaceChildren(gesture.originalSpread);
+        }
+      }
+    }
+
+    function cancelPdfPageDrag(event) {
+      if (!pdfPointerGesture || event.pointerId !== pdfPointerGesture.pointerId) return;
+      pdfPointerGesture.cancelled = true;
+      finishPdfPageDrag({ pointerId: event.pointerId, clientX: pdfPointerGesture.startX });
+    }
+
+    function handlePdfPageKeydown(event) {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      turnPdfPage(event.key === 'ArrowRight' ? 1 : -1);
+    }
+
+    function viewModuleDocument(moduleIndex, documentIndex) {
+      viewFile(state.modules[moduleIndex].docs[documentIndex].file);
+    }
+
+    function viewProjectDocument(projectIndex, fileIndex) {
+      viewFile(state.projects[projectIndex].files[fileIndex]);
+    }
+
+    function viewProjectAttachment(projectIndex) {
+      viewFile(state.projects[projectIndex].file);
+    }
+
+    function viewResourceAttachment(resourceIndex) {
+      viewFile(state.resources[resourceIndex].file);
+    }
+
+    function viewAssignmentAttachment(assignmentIndex) {
+      viewFile(state.assignments[assignmentIndex].file);
+    }
+
+    function viewLabAttachment(labIndex) {
+      viewFile(state.labs[labIndex].file);
+    }
+
+    function viewToolAttachment(toolIndex) {
+      viewFile(state.tools[toolIndex].file);
+    }
+
+    // Navigation scroll & active state
+    function scrollToSection(id) {
+      navigateToPage(id);
+    }
+
+    function navigateToPage(id) {
+      const page = document.getElementById(id);
+      if (!page || !page.classList.contains('app-page')) return;
+      if (window.location.hash === `#${id}`) renderActivePage();
+      else window.location.hash = id;
+    }
+
+    function renderActivePage() {
+      const pageIds = Array.from(document.querySelectorAll('.app-page')).map(page => page.id);
+      const requestedPage = window.location.hash.slice(1);
+      const activePage = pageIds.includes(requestedPage) ? requestedPage : 'home';
+      document.querySelectorAll('.app-page').forEach(page => {
+        page.classList.toggle('active', page.id === activePage);
+      });
+      document.querySelectorAll('.nav-btn').forEach(button => {
+        const active = button.getAttribute('href') === `#${activePage}`;
+        button.className = active
+          ? 'nav-btn active bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white px-3 py-2 rounded-full flex items-center space-x-1.5 transition'
+          : 'nav-btn text-slate-600 hover:text-[#1E3A5F] hover:bg-sky-50 px-3 py-2 rounded-full flex items-center space-x-1.5 transition';
+      });
+      const pageTitles = {
+        home: 'Home',
+        modules: 'Modules',
+        labs: 'Lab Experiments',
+        assignments: 'Assignments',
+        projects: 'Projects',
+        tools: 'Tools',
+        resources: 'Resources',
+        profile: 'Profile'
+      };
+      document.title = activePage === 'home' ? 'DATA SCIENCE DIGITAL LIBRARY' : `${pageTitles[activePage]} | DATA SCIENCE DIGITAL LIBRARY`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Helper: Convert File to Base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve({
+          name: file.name,
+          type: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream'),
+          data: reader.result
+        });
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    // Empty State Generator
+    function getEmptyStateHTML(title, subtitle, btnText, modalId) {
+      return `
+        <div class="col-span-full border-2 border-dashed border-[#1E3A5F]/20 200 rounded-3xl p-8 text-center bg-sky-50/50 flex flex-col items-center justify-center">
+          <div class="w-12 h-12 rounded-full bg-[#FFF2BA]/20 text-[#1E3A5F] flex items-center justify-center mb-3">
+            <i class="fa-solid fa-folder-open text-xl"></i>
+          </div>
+          <h4 class="text-sm font-bold text-slate-800 mb-1">${title}</h4>
+          <p class="text-xs text-slate-500 mb-4 max-w-sm">${subtitle}</p>
+          <button onclick="${modalId === 'addProjectModal' ? 'openNewProjectModal()' : `openModal('${modalId}')`}" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm hover:shadow-lg transition">
+            ${btnText}
+          </button>
+        </div>
+      `;
+    }
+
+    // Render Function
+    function renderAll() {
+      // Header & Profile
+      document.getElementById('collegeLogo').src = state.profile.logo;
+      document.getElementById('headerStudentName').innerText = state.profile.name;
+      document.getElementById('headerRegNo').innerText = state.profile.regNo;
+      document.getElementById('headerAvatar').src = state.profile.avatar;
+      document.getElementById('homeAvatar').src = state.profile.avatar;
+      document.getElementById('homeStudentName').innerText = state.profile.name;
+      document.getElementById('homeRegNo').innerText = state.profile.regNo;
+      document.getElementById('homeDept').innerText = state.profile.dept;
+      renderCollegeId();
+
+      document.getElementById('profileAvatar').src = state.profile.avatar;
+      document.getElementById('profName').innerText = state.profile.name;
+      document.getElementById('profRegNo').innerText = 'Registration No: ' + state.profile.regNo;
+      document.getElementById('profDept').innerText = state.profile.dept;
+      document.getElementById('profSec').innerText = 'Section: ' + state.profile.section;
+      document.getElementById('profSubject').innerText = state.profile.subject;
+      document.getElementById('profSupervisor').innerText = state.profile.supervisor;
+      document.getElementById('linkGithub').href = getSafeExternalUrl(state.profile.github) || '#';
+      document.getElementById('linkLinkedin').href = getSafeExternalUrl(state.profile.linkedin) || '#';
+      document.getElementById('linkEmail').href = 'mailto:' + (state.profile.email || '');
+
+      // Counters
+      document.getElementById('cntModules').innerText = state.modules.length;
+      document.getElementById('cntLabs').innerText = state.labs.length;
+      document.getElementById('cntAssignments').innerText = state.assignments.length;
+      document.getElementById('cntProjects').innerText = state.projects.length;
+      document.getElementById('cntTools').innerText = state.tools.length;
+      document.getElementById('cntResources').innerText = state.resources.length;
+
+      // Activity Stream
+      const activityEl = document.getElementById('activityLog');
+      if (state.activities.length === 0) {
+        activityEl.innerHTML = `<li class="text-slate-400 italic">No recent activity recorded yet.</li>`;
+      } else {
+        activityEl.innerHTML = state.activities.map(a => `
+          <li class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+            <span class="text-slate-700"><i class="fa-solid fa-circle-check text-sky-500 mr-2"></i>${escapeHtml(a.text)}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${a.time}</span>
+          </li>
+        `).join('');
+      }
+
+      renderModuleLibrary();
+
+      // Labs Render
+      const lList = document.getElementById('labsList');
+      if (state.labs.length === 0) {
+        lList.innerHTML = `<div class="rounded-2xl border-2 border-dashed border-[#1E3A5F]/20 200 bg-sky-50/50 p-5 text-center">
+          <i class="fa-solid fa-flask text-xl text-sky-500"></i>
+          <p class="mt-2 text-xs font-semibold text-slate-700">No experiments yet</p>
+          <p class="mt-1 text-[11px] text-slate-500">Add one to build your lab notebook.</p>
+        </div>`;
+      } else {
+        lList.innerHTML = state.labs.map((l, idx) => `
+          <div class="bg-white border border-[#1E3A5F]/20 100 p-3 rounded-2xl shadow-sm space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <h4 class="font-bold text-slate-900 text-xs leading-snug">${escapeHtml(l.title)}</h4>
+              <button onclick="deleteLab(${idx})" aria-label="Delete ${escapeHtml(l.title)}" class="shrink-0 text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${l.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : l.status === 'In Review' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${escapeHtml(l.status)}</span>
+            ${l.code ? `<button type="button" onclick="loadLabExperiment(${idx})" class="w-full rounded-lg bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] px-3 py-2 text-[11px] font-semibold text-white hover:shadow-lg"><i class="fa-solid fa-code mr-1"></i>Load into editor</button>` : `<p class="text-[11px] text-slate-500">No saved code snippet.</p>`}
+            <div class="flex flex-wrap gap-2 text-[11px]">
+              ${getSafeExternalUrl(l.github) ? `<a href="${escapeHtml(getSafeExternalUrl(l.github))}" rel="noopener noreferrer" target="_blank" class="text-[#1E3A5F] hover:underline"><i class="fa-brands fa-github mr-1"></i>Repo</a>` : ''}
+              ${l.file ? `${isPdfFile(l.file) ? `<button type="button" onclick="viewLabAttachment(${idx})" class="text-[#1E3A5F] hover:underline">View PDF</button>` : ''}<a href="${l.file.data}" download="${escapeHtml(l.file.name)}" class="text-[#1E3A5F] hover:underline"><i class="fa-solid fa-download mr-1"></i>File</a>` : ''}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Assignments Render
+      const aGrid = document.getElementById('assignmentsGrid');
+      if (state.assignments.length === 0) {
+        aGrid.innerHTML = getEmptyStateHTML('No Assignments Tracked', 'Organize coursework submissions and due dates.', 'Add Assignment', 'addAssignmentModal');
+      } else {
+        aGrid.innerHTML = state.assignments.map((a, idx) => `
+          <div class="bg-white border border-[#1E3A5F]/20 100 p-5 rounded-2xl shadow-sm space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                  a.priority === 'High' ? 'bg-red-100 text-red-700' :
+                  a.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'
+                }">${a.priority} Priority</span>
+                <h3 class="font-bold text-slate-900 text-sm mt-1">${escapeHtml(a.title)}</h3>
+              </div>
+              <button onclick="deleteAssignment(${idx})" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+            <div class="text-xs text-slate-500 space-y-1">
+              <p><i class="fa-regular fa-calendar mr-1 text-[#1E3A5F]"></i>Due: ${a.dueDate}</p>
+              <p><i class="fa-solid fa-spinner mr-1 text-[#1E3A5F]"></i>Status: <strong class="text-slate-700">${a.status}</strong></p>
+            </div>
+            ${a.file ? `
+              <div class="flex gap-2">
+                ${isPdfFile(a.file) ? `<button type="button" onclick="viewAssignmentAttachment(${idx})" class="flex-1 text-center py-2 bg-[#FFF2BA]/20 text-[#1E3A5F] rounded-xl font-semibold text-xs">View PDF</button>` : ''}
+                <a href="${a.file.data}" download="${escapeHtml(a.file.name)}" class="flex-1 text-center py-2 bg-sky-50 text-[#1E3A5F] rounded-xl font-semibold text-xs hover:bg-[#FFF2BA]/20 transition">
+                  <i class="fa-solid fa-paperclip mr-1"></i>Download Attachment
+                </a>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+
+      // Projects Render
+      const pGrid = document.getElementById('projectsGrid');
+      if (state.projects.length === 0) {
+        pGrid.innerHTML = getEmptyStateHTML('No Projects Added', 'Display your data science and machine learning portfolio.', 'Add Portfolio Project', 'addProjectModal');
+      } else {
+        pGrid.innerHTML = state.projects.map((p, idx) => `
+          <div class="bg-white border border-[#1E3A5F]/20 100 rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-slate-900 text-base">${escapeHtml(p.title)}</h3>
+                <div class="flex gap-3">
+                  <button onclick="openEditProject(${idx})" class="text-[#1E3A5F] hover:text-[#1E3A5F] transition" aria-label="Edit ${escapeHtml(p.title)}"><i class="fa-solid fa-pen"></i></button>
+                  <button onclick="deleteProject(${idx})" class="text-slate-400 hover:text-red-500 transition" aria-label="Delete ${escapeHtml(p.title)}"><i class="fa-solid fa-trash text-xs"></i></button>
+                </div>
+              </div>
+              <p class="text-xs text-slate-600 mb-3">${escapeHtml(p.summary)}</p>
+              <div class="flex flex-wrap gap-1.5 mb-3">
+                ${(p.tech || []).map(t => `<span class="px-2 py-0.5 bg-sky-50 text-[#1E3A5F] text-[10px] font-semibold rounded-md">${escapeHtml(t.trim())}</span>`).join('')}
+              </div>
+              ${(p.files || []).length ? `
+                <details class="rounded-xl bg-sky-50/60 p-3">
+                  <summary class="cursor-pointer text-xs font-semibold text-slate-700">Project folder · ${p.files.length} file${p.files.length === 1 ? '' : 's'}</summary>
+                  <ul class="mt-2 space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
+                    ${p.files.map((file, fileIndex) => `<li class="flex items-center justify-between gap-3 text-[11px]"><span class="truncate text-slate-600">${escapeHtml(file.relativePath || file.name)}</span><span class="shrink-0 flex gap-2">${isPdfFile(file) ? `<button type="button" onclick="viewProjectDocument(${idx}, ${fileIndex})" class="text-[#1E3A5F]">View</button>` : ''}<a href="${file.data}" download="${escapeHtml(file.name)}" class="text-[#1E3A5F]">Download</a></span></li>`).join('')}
+                  </ul>
+                </details>
+              ` : ''}
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 text-xs">
+              ${getSafeExternalUrl(p.github) ? `<a href="${escapeHtml(getSafeExternalUrl(p.github))}" rel="noopener noreferrer" target="_blank" class="px-3 py-2 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition flex items-center space-x-1"><i class="fa-brands fa-github"></i><span>GitHub</span></a>` : ''}
+              ${getSafeExternalUrl(p.demo) ? `<a href="${escapeHtml(getSafeExternalUrl(p.demo))}" rel="noopener noreferrer" target="_blank" class="px-3 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white rounded-xl font-medium hover:shadow-lg transition flex items-center space-x-1"><i class="fa-solid fa-arrow-up-right-from-square"></i><span>Live Demo</span></a>` : ''}
+              ${p.file ? `${isPdfFile(p.file) ? `<button type="button" onclick="viewProjectAttachment(${idx})" class="px-3 py-2 bg-sky-50 text-[#1E3A5F] rounded-xl font-medium hover:bg-[#FFF2BA]/20 transition flex items-center space-x-1"><i class="fa-solid fa-eye"></i><span>View PDF</span></button>` : ''}<a href="${p.file.data}" download="${escapeHtml(p.file.name)}" class="px-3 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition flex items-center space-x-1"><i class="fa-solid fa-file-arrow-down"></i><span>Download</span></a>` : ''}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      renderToolLibrary();
+
+      // Resources Render
+      renderResourcesList('All');
+    }
+
+    function selectModule(idx) {
+      activeModuleIndex = idx;
+      renderModuleLibrary();
+    }
+
+    function renderModuleLibrary() {
+      const list = document.getElementById('modulesList');
+      const detail = document.getElementById('moduleDetail');
+      list.innerHTML = state.modules.length ? state.modules.map((module, idx) => `
+        <div class="rounded-xl border border-[#1E3A5F]/20 100 overflow-hidden">
+          <button type="button" class="library-list-button rounded-xl p-3 ${idx === activeModuleIndex ? 'bg-sky-900 text-white' : 'hover:bg-sky-50'}" aria-current="${idx === activeModuleIndex}" onclick="selectModule(${idx})">
+            <span class="block text-xs font-bold">${escapeHtml(module.title)}</span>
+            <span class="library-list-meta block mt-1 text-[10px] ${idx === activeModuleIndex ? 'text-white/70' : 'text-slate-500'}">${escapeHtml(module.code)} · ${(module.docs || []).length} file${(module.docs || []).length === 1 ? '' : 's'}</span>
+          </button>
+          ${(module.docs || []).length ? `<div class="px-2 pb-2 space-y-1">${module.docs.map((doc, docIndex) => `
+            <button type="button" onclick="viewModuleDocument(${idx}, ${docIndex})" class="w-full rounded-lg px-2 py-1.5 text-left text-[10px] text-slate-600 hover:bg-sky-50 truncate" title="Open ${escapeHtml(doc.name)}"><i class="fa-regular fa-file-lines mr-1.5 text-[#1E3A5F]"></i>${escapeHtml(doc.name)}</button>
+          `).join('')}</div>` : ''}
+        </div>
+      `).join('') : `<div class="rounded-xl bg-white/70 p-4 text-center"><p class="text-xs font-semibold">No modules yet</p><button onclick="openNewModuleModal()" class="mt-2 text-xs font-semibold text-[#1E3A5F]">Add your first module</button></div>`;
+      if (!state.modules.length) {
+        detail.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center"><i class="fa-solid fa-book-open text-3xl text-[#1E3A5F]"></i><h3 class="mt-3 text-sm font-bold">Your learning space</h3><p class="mt-1 text-xs text-slate-500">Choose a module from the contents list or add a new one.</p></div>`;
+        return;
+      }
+      if (activeModuleIndex >= state.modules.length) activeModuleIndex = 0;
+      const module = state.modules[activeModuleIndex];
+      detail.innerHTML = `
+        <article class="glass-card rounded-2xl p-5 sm:p-7 shadow-sm">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div><span class="inline-flex rounded-lg bg-[#FFF2BA]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]">${escapeHtml(module.code)}</span>
+              <h3 class="mt-3 text-xl font-bold text-slate-900">${escapeHtml(module.title)}</h3>
+              <p class="mt-1 text-xs font-medium text-[#1E3A5F]">Instructor: ${escapeHtml(module.instructor || 'Not specified')}</p></div>
+            <div class="flex gap-2"><button onclick="openEditModule(${activeModuleIndex})" class="rounded-lg bg-[#FFF2BA]/20 px-3 py-2 text-xs font-semibold text-[#1E3A5F]"><i class="fa-solid fa-pen mr-1"></i>Edit</button><button onclick="deleteModule(${activeModuleIndex})" class="rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700"><i class="fa-solid fa-trash mr-1"></i>Delete</button></div>
+          </div>
+          <p class="mt-4 text-sm leading-6 text-slate-600">${escapeHtml(module.desc || 'Add a short description to organize your module.')}</p>
+          <div class="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+            <h4 class="text-sm font-bold text-slate-900">Module materials <span class="text-slate-400">(${(module.docs || []).length})</span></h4>
+            <button onclick="openUploadModuleDoc(${activeModuleIndex})" class="rounded-lg bg-sky-700 px-3 py-2 text-xs font-semibold text-white"><i class="fa-solid fa-plus mr-1"></i>Add material</button>
+          </div>
+          ${(module.docs || []).length ? `<div class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-100 bg-white">${module.docs.map((doc, docIndex) => `
+            <div class="flex flex-wrap items-center justify-between gap-3 p-3">
+              <button type="button" onclick="viewModuleDocument(${activeModuleIndex}, ${docIndex})" class="min-w-0 flex-1 text-left text-xs font-semibold text-[#1E3A5F] hover:underline"><i class="fa-regular ${isPdfFile(doc.file) ? 'fa-file-pdf' : 'fa-file-lines'} mr-2 text-[#1E3A5F]"></i>${escapeHtml(doc.name)}</button>
+                  <div class="flex items-center gap-3 text-xs">${isPdfFile(doc.file) ? `<button type="button" onclick="viewModuleDocument(${activeModuleIndex}, ${docIndex})" class="font-semibold text-[#1E3A5F] hover:underline"><i class="fa-solid fa-book-open mr-1"></i>Open flipbook</button>` : ''}<a href="${doc.file.data}" download="${escapeHtml(doc.file.name)}" class="text-[#1E3A5F] hover:underline">Download</a><button onclick="deleteModuleDoc(${activeModuleIndex}, ${docIndex})" aria-label="Delete ${escapeHtml(doc.name)}" class="text-rose-600 hover:text-rose-800">Delete</button></div>
+            </div>
+          `).join('')}</div>` : `<p class="mt-3 rounded-xl border border-dashed border-[#1E3A5F]/20 200 bg-white/70 p-5 text-center text-xs text-slate-500">No materials yet. Add lecture slides, notes, or PDFs here.</p>`}
+        </article>`;
+    }
+
+    function selectTool(idx) {
+      activeToolIndex = idx;
+      renderToolLibrary();
+    }
+
+    function openWorkflowStage(stage) {
+      const workflowStages = {
+        collect: { page: 'resources', resourceCategory: 'Datasets' },
+        prepare: { page: 'tools', toolName: 'pandas' },
+        analyze: { page: 'labs' },
+        share: { page: 'projects' }
+      };
+      const selection = workflowStages[stage];
+      if (!selection) return;
+
+      navigateToPage(selection.page);
+      if (selection.resourceCategory) {
+        const categoryButton = Array.from(document.querySelectorAll('.res-tab'))
+          .find(button => button.textContent.trim() === selection.resourceCategory);
+        filterResources(selection.resourceCategory, categoryButton);
+      }
+      if (selection.toolName) {
+        const toolIndex = state.tools.findIndex(tool => tool.name.toLowerCase() === selection.toolName);
+        if (toolIndex !== -1) selectTool(toolIndex);
+      }
+    }
+
+    function renderToolLibrary() {
+      const list = document.getElementById('toolsList');
+      const detail = document.getElementById('toolDetail');
+      list.innerHTML = state.tools.length ? state.tools.map((tool, idx) => `
+        <button type="button" class="library-list-button rounded-xl border border-[#1E3A5F]/20 100 p-3 ${idx === activeToolIndex ? 'bg-sky-900 text-white' : 'bg-white/70 hover:bg-sky-50'}" aria-current="${idx === activeToolIndex}" onclick="selectTool(${idx})">
+          <span class="block text-xs font-bold">${escapeHtml(tool.name)}</span>
+          <span class="library-list-meta block mt-1 text-[10px] ${idx === activeToolIndex ? 'text-white/70' : 'text-slate-500'}">${escapeHtml(tool.category || 'Tool')}</span>
+        </button>
+      `).join('') : `<div class="rounded-xl bg-white/70 p-4 text-center"><p class="text-xs font-semibold">No tools added</p><button onclick="openNewToolModal()" class="mt-2 text-xs font-semibold text-[#1E3A5F]">Add your first tool</button></div>`;
+      if (!state.tools.length) {
+        detail.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center"><i class="fa-solid fa-screwdriver-wrench text-3xl text-[#1E3A5F]"></i><h3 class="mt-3 text-sm font-bold">Data science toolkit</h3><p class="mt-1 text-xs text-slate-500">Add a tool to build your own learning library.</p></div>`;
+        return;
+      }
+      if (activeToolIndex >= state.tools.length) activeToolIndex = 0;
+      const tool = state.tools[activeToolIndex];
+      const tutorialUrl = getToolTutorialUrl(tool);
+      detail.innerHTML = `
+        <article class="glass-card rounded-2xl p-5 sm:p-7 shadow-sm">
+          <div>
+            <span class="inline-flex rounded-lg bg-[#FFF2BA]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]">${escapeHtml(tool.category || 'Data science tool')}</span>
+            <h3 class="mt-3 text-xl font-bold text-slate-900">${escapeHtml(tool.name)}</h3>
+          </div>
+          <p class="mt-4 text-sm leading-6 text-slate-600">${escapeHtml(tool.notes || 'Add a note about how you use this data science tool.')}</p>
+          <div class="mt-5 rounded-xl border border-[#1E3A5F]/20 100 bg-white p-4">
+            <h4 class="text-xs font-bold uppercase tracking-wide text-slate-700">Where it fits in a data science workflow</h4>
+            <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px] font-semibold">
+              <button type="button" onclick="openWorkflowStage('collect')" class="rounded-lg bg-[#FFF8D9] p-3 transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" aria-label="Collect: browse datasets"><i class="fa-solid fa-database block text-lg text-[#1E3A5F]"></i><span class="mt-1 block">Collect</span></button>
+              <button type="button" onclick="openWorkflowStage('prepare')" class="rounded-lg bg-[#FFF8D9] p-3 transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" aria-label="Prepare: open data preparation tools"><i class="fa-solid fa-broom block text-lg text-[#1E3A5F]"></i><span class="mt-1 block">Prepare</span></button>
+              <button type="button" onclick="openWorkflowStage('analyze')" class="rounded-lg bg-[#FFF8D9] p-3 transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" aria-label="Analyze or model: open lab experiments"><i class="fa-solid fa-chart-line block text-lg text-[#1E3A5F]"></i><span class="mt-1 block">Analyze / model</span></button>
+              <button type="button" onclick="openWorkflowStage('share')" class="rounded-lg bg-[#FFF8D9] p-3 transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" aria-label="Share insights: open portfolio projects"><i class="fa-solid fa-lightbulb block text-lg text-[#1E3A5F]"></i><span class="mt-1 block">Share insights</span></button>
+            </div>
+            <p class="mt-3 text-[11px] text-slate-500"><i class="fa-solid fa-arrow-right text-[#1E3A5F]"></i> Data → clean features → ${escapeHtml(tool.name)} → validated results → useful decisions</p>
+          </div>
+          <div class="mt-5 flex flex-wrap gap-2">
+            ${getSafeExternalUrl(tool.url) ? `<a href="${escapeHtml(getSafeExternalUrl(tool.url))}" target="_self" class="rounded-lg bg-sky-800 px-4 py-2.5 text-xs font-semibold text-white"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Open ${escapeHtml(tool.name)}</a>` : ''}
+            <a href="${escapeHtml(tutorialUrl)}" target="_self" class="rounded-lg bg-rose-600 px-4 py-2.5 text-xs font-semibold text-white"><i class="fa-brands fa-youtube mr-1"></i>Find YouTube lessons</a>
+            ${tool.file ? (isPdfFile(tool.file)
+              ? `<button type="button" onclick="viewToolAttachment(${activeToolIndex})" class="rounded-lg bg-[#FFF2BA]/20 px-4 py-2.5 text-xs font-semibold text-[#1E3A5F]"><i class="fa-regular fa-eye mr-1"></i>View guide PDF</button>`
+              : `<a href="${tool.file.data}" target="_blank" rel="noopener noreferrer" class="rounded-lg bg-[#FFF2BA]/20 px-4 py-2.5 text-xs font-semibold text-[#1E3A5F]"><i class="fa-regular fa-eye mr-1"></i>View guide file</a>`) : ''}
+          </div>
+          ${tool.file ? `<p class="mt-3 text-[10px] text-slate-500">Attached learning material: ${escapeHtml(tool.file.name)}</p>` : `<p class="mt-3 text-[10px] text-slate-500">Attach a PDF guide or PowerPoint when adding this tool.</p>`}
+        </article>`;
+    }
+
+    function downloadToolPresentation() {
+      const slides = state.tools.map(tool => {
+        const tutorialUrl = getToolTutorialUrl(tool);
+        return `<section><p class="eyebrow">${escapeHtml(tool.category || 'Data science tool')}</p><h1>${escapeHtml(tool.name)}</h1><p>${escapeHtml(tool.notes || '')}</p><h2>Where this tool fits</h2><div class="flow"><span>COLLECT</span><b>→</b><span>PREPARE</span><b>→</b><span>${escapeHtml(tool.name.toUpperCase())}</span><b>→</b><span>VALIDATE</span><b>→</b><span>SHARE</span></div><p class="link"><a href="${escapeHtml(tutorialUrl)}">Watch YouTube lessons for ${escapeHtml(tool.name)}</a></p></section>`;
+      }).join('');
+      const presentation = `<!doctype html><html><head><meta charset="utf-8"><title>Data Science Tools - Presentation</title><style>body{font-family:Arial,sans-serif;color:#030f3c}section{box-sizing:border-box;min-height:95vh;padding:8vh 8vw;page-break-after:always;border-bottom:12px solid #fff2ba}h1{font-size:38pt}h2{margin-top:2em}.eyebrow{color:#304a78;text-transform:uppercase;font-size:14pt}p{font-size:18pt;line-height:1.5}.flow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:24px;background:#fff8d9;border-radius:16px;font-weight:bold;font-size:15pt}.flow span{padding:14px;background:#fff;border:2px solid #304a78;border-radius:12px;text-align:center}.flow b{color:#304a78}.link{margin-top:2em}.link a{color:#304a78}</style></head><body><section><p class="eyebrow">Learning deck</p><h1>DATA SCIENCE TOOLKIT</h1><p>A practical map of tools used across the data science workflow.</p><div class="flow"><span>COLLECT</span><b>→</b><span>PREPARE</span><b>→</b><span>ANALYZE & MODEL</span><b>→</b><span>COMMUNICATE</span></div><p>${state.tools.length} learning topics</p></section>${slides}</body></html>`;
+      const blob = new Blob([presentation], { type: 'application/vnd.ms-powerpoint' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'data-science-tools-presentation.ppt';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 0);
+    }
+
+    function getToolTutorialUrl(tool) {
+      const tutorial = tool.tutorial || '';
+      try {
+        const url = new URL(tutorial);
+        if (url.protocol === 'https:' && ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname)) return url.href;
+      } catch {
+        // A search phrase is used when no direct YouTube URL was provided.
+      }
+      return `https://www.youtube.com/results?search_query=${encodeURIComponent(tutorial || `${tool.name} data science tutorial`)}`;
+    }
+
+    function renderResourcesList(cat) {
+      const rGrid = document.getElementById('resourcesGrid');
+      const filtered = state.resources.map((resource, index) => ({ resource, index }))
+        .filter(({ resource }) => cat === 'All' || resource.category === cat);
+
+      if (filtered.length === 0) {
+        rGrid.innerHTML = getEmptyStateHTML('No Resources Found', 'Store cheatsheets, Kaggle datasets, and research papers.', 'Add Resource', 'addResourceModal');
+      } else {
+        rGrid.innerHTML = filtered.map(({ resource: r, index }) => `
+          <div class="bg-white border border-[#1E3A5F]/20 100 p-4 rounded-2xl shadow-sm space-y-3 flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start">
+                <span class="px-2 py-0.5 bg-[#FFF2BA]/20 text-[#1E3A5F] text-[10px] font-bold rounded">${escapeHtml(r.category)}</span>
+              </div>
+              <h3 class="font-bold text-slate-900 text-sm mt-2">${escapeHtml(r.title)}</h3>
+            </div>
+            <div class="flex items-center space-x-2 pt-2 border-t border-slate-100 text-xs">
+              ${getSafeExternalUrl(r.url) ? `<a href="${escapeHtml(getSafeExternalUrl(r.url))}" rel="noopener noreferrer" target="_blank" class="flex-1 text-center py-1.5 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white rounded-lg font-medium hover:shadow-lg transition"><i class="fa-solid fa-eye mr-1"></i>View resource</a>` : ''}
+              ${r.file ? (isPdfFile(r.file)
+                ? `<button type="button" onclick="viewResourceAttachment(${index})" class="flex-1 text-center py-1.5 bg-sky-50 text-[#1E3A5F] rounded-lg font-medium"><i class="fa-regular fa-eye mr-1"></i>View PDF</button>`
+                : `<a href="${r.file.data}" target="_blank" rel="noopener noreferrer" class="flex-1 text-center py-1.5 bg-sky-50 text-[#1E3A5F] rounded-lg font-medium"><i class="fa-regular fa-eye mr-1"></i>View file</a>`) : ''}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function filterResources(cat, button) {
+      document.querySelectorAll('.res-tab').forEach(b => {
+        b.className = 'res-tab bg-white text-slate-600 border border-slate-200 hover:bg-sky-50 px-3 py-1.5 rounded-lg text-xs font-medium transition';
+      });
+      if (button) button.className = 'res-tab bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition';
+      renderResourcesList(cat);
+    }
+
+    async function runLabCode() {
+      const button = document.getElementById('runCodeButton');
+      const output = document.getElementById('compilerOutput');
+      const comparison = document.getElementById('compilerComparison');
+      const language = document.getElementById('compilerLanguage').value;
+      const code = document.getElementById('compilerCode').value;
+      const input = document.getElementById('compilerInput').value;
+      const languageIds = { python: 71, pytorch: 71, pandas: 71, numpy: 71, java: 62, c: 50, cpp: 54, r: 80 };
+
+      if (!code.trim()) {
+        output.textContent = 'Write some code before running it.';
+        comparison.classList.add('hidden');
+        return;
+      }
+
+      button.disabled = true;
+      button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Running...';
+      output.textContent = 'Compiling and running in the online sandbox...';
+      comparison.classList.add('hidden');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      try {
+        const response = await fetch('https://ce.judge0.com/submissions?base64_encoded=false&wait=true', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            source_code: code,
+            language_id: languageIds[language],
+            stdin: input
+          })
+        });
+        if (!response.ok) throw new Error(`Compiler service returned HTTP ${response.status}.`);
+        const result = await response.json();
+        const standardOutput = result.stdout || '';
+        const diagnostics = [result.compile_output, result.stderr, result.message].filter(Boolean).join('\n');
+        output.textContent = standardOutput || diagnostics || result.status.description;
+        if (result.status.id !== 3) output.textContent = `${result.status.description}.\n${output.textContent}`;
+        const expected = document.getElementById('compilerExpected').value.trim();
+        if (expected && result.status.id === 3) {
+          const matches = standardOutput.trim() === expected;
+          comparison.textContent = matches ? 'Matches the sample output' : 'Does not match the sample output';
+          comparison.className = `rounded-lg px-3 py-2 text-xs font-semibold ${matches ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`;
+          comparison.classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Code execution failed:', error);
+        output.textContent = error.name === 'AbortError'
+          ? 'Code execution timed out. Try again with a smaller program.'
+          : `Could not run code: ${error.message} Check your internet connection or try again later.`;
+      } finally {
+        clearTimeout(timeoutId);
+        button.disabled = false;
+        button.innerHTML = '<i class="fa-solid fa-play mr-1"></i>Run code';
+      }
+    }
+
+    function loadLabExperiment(index) {
+      const lab = state.labs[index];
+      if (!lab || !lab.code) return;
+      document.getElementById('compilerCode').value = lab.code;
+      document.getElementById('compilerCode').focus();
+    }
+
+    // ================= ACTIONS & SAVE HANDLERS =================
+
+    function renderCollegeId() {
+      const preview = document.getElementById('collegeIdPreview');
+      const action = document.getElementById('collegeIdAction');
+        const actions = document.getElementById('collegeIdActions');
+        const editButton = document.getElementById('editCollegeIdButton');
+        const card = state.collegeId;
+        preview.replaceChildren();
+        if (!card) {
+        preview.innerHTML = `<div class="px-4 py-8 text-center text-slate-400">
+          <i class="fa-regular fa-id-card text-3xl"></i>
+          <p class="mt-2 text-xs">Your ID card preview will appear here</p>
+        </div>`;
+        action.textContent = 'Add ID';
+        actions.classList.add('hidden');
+        return;
+      }
+      action.textContent = 'Replace';
+      actions.classList.remove('hidden');
+      editButton.classList.toggle('hidden', isPdfFile(card));
+      if (isPdfFile(card)) {
+        preview.innerHTML = `<div class="p-6 text-center">
+          <i class="fa-solid fa-file-pdf text-4xl text-[#1E3A5F]"></i>
+          <p class="mt-2 max-w-full truncate text-xs font-semibold text-slate-700">${escapeHtml(card.name)}</p>
+          <button type="button" onclick="viewCollegeIdPdf()" class="mt-3 rounded-lg bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] px-3 py-2 text-xs font-semibold text-white hover:shadow-lg">Preview ID card</button>
+        </div>`;
+      } else {
+        const image = document.createElement('img');
+        image.src = card.data;
+        image.alt = 'Uploaded college ID card';
+        image.className = 'max-h-52 w-full cursor-zoom-in object-contain';
+        image.title = 'Click to view and zoom';
+        image.onclick = viewCollegeId;
+        preview.appendChild(image);
+      }
+    }
+
+    function viewCollegeId() {
+      if (!state.collegeId) return;
+      if (isPdfFile(state.collegeId)) {
+        viewFile(state.collegeId);
+        return;
+      }
+      openIdCardModal('view');
+    }
+
+    function openIdEditor() {
+      if (!state.collegeId || isPdfFile(state.collegeId)) return;
+      openIdCardModal('edit');
+    }
+
+    function openIdCardModal(mode) {
+      idEditorMode = mode;
+      const modal = document.getElementById('idEditorModal');
+      document.getElementById('idEditorImage').src = state.collegeId.data;
+      document.getElementById('idZoom').value = '1';
+      document.getElementById('idCropX').value = '50';
+      document.getElementById('idCropY').value = '50';
+      modal.querySelectorAll('input[type="range"]').forEach(input => input.classList.toggle('hidden', mode === 'view' && input.id !== 'idZoom'));
+      modal.querySelector('p').textContent = mode === 'view' ? 'Use zoom to inspect your ID card, then close when finished.' : 'Adjust zoom and position, then save the cropped image.';
+      modal.querySelector('button[onclick="saveIdCrop()"]').classList.toggle('hidden', mode === 'view');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      updateIdCropPreview();
+    }
+
+    function updateIdCropPreview() {
+      const image = document.getElementById('idEditorImage');
+      const zoomVal = Number(document.getElementById('idZoom').value);
+      const xVal = Number(document.getElementById('idCropX').value);
+      const yVal = Number(document.getElementById('idCropY').value);
+      
+      image.style.objectFit = 'cover';
+      image.style.objectPosition = `${xVal}% ${yVal}%`;
+      image.style.transform = `scale(${zoomVal})`;
+      
+      document.getElementById('zoomLevel').textContent = Math.round(zoomVal * 100) + '%';
+      document.getElementById('xLevel').textContent = xVal + '%';
+      document.getElementById('yLevel').textContent = yVal + '%';
+    }
+
+    async function saveIdCrop() {
+      const image = document.getElementById('idEditorImage');
+      if (!image.complete || !image.naturalWidth || idEditorMode !== 'edit') {
+        alert('The ID card image is not ready to crop yet.');
+        return;
+      }
+      const zoom = Number(document.getElementById('idZoom').value);
+      const xPosition = Number(document.getElementById('idCropX').value) / 100;
+      const yPosition = Number(document.getElementById('idCropY').value) / 100;
+      const aspect = 640 / 420;
+      let cropWidth = Math.min(image.naturalWidth, image.naturalHeight * aspect) / zoom;
+      let cropHeight = cropWidth / aspect;
+      if (cropHeight > image.naturalHeight) {
+        cropHeight = image.naturalHeight / zoom;
+        cropWidth = cropHeight * aspect;
+      }
+      const sourceX = (image.naturalWidth - cropWidth) * xPosition;
+      const sourceY = (image.naturalHeight - cropHeight) * yPosition;
+      const canvas = document.createElement('canvas');
+      canvas.width = 960;
+      canvas.height = Math.round(canvas.width / aspect);
+      const context = canvas.getContext('2d');
+      if (!context) {
+        alert('Your browser could not prepare the cropped image.');
+        return;
+      }
+      context.drawImage(image, sourceX, sourceY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+      state.collegeId = { ...state.collegeId, type: 'image/png', data: canvas.toDataURL('image/png') };
+      logActivity('Edited and cropped College ID Card');
+      closeModal('idEditorModal');
+      await saveState();
+    }
+
+    async function uploadCollegeId(event) {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      if (!file.type.startsWith('image/') && file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        alert('Choose an image or PDF file for your college ID card.');
+        return;
+      }
+      try {
+        state.collegeId = await fileToBase64(file);
+        logActivity('Updated College ID Card');
+        await saveState();
+      } catch (error) {
+        console.error('Could not read college ID card:', error);
+        alert('Could not read this ID card file. Please try another image or PDF.');
+      }
+    }
+
+    async function removeCollegeId() {
+      state.collegeId = null;
+      logActivity('Removed College ID Card');
+      await saveState();
+    }
+
+    function viewCollegeIdPdf() {
+      if (state.collegeId) viewFile(state.collegeId);
+    }
+
+    async function uploadLogo(e) {
+      const file = e.target.files[0];
+      if(file) {
+        const res = await fileToBase64(file);
+        state.profile.logo = res.data;
+        logActivity('Updated College Emblem Logo');
+        saveState();
+      }
+    }
+
+    function openNewModuleModal() {
+      const form = document.querySelector('#addModuleModal form');
+      form.reset();
+      document.getElementById('mEditIndex').value = '';
+      document.getElementById('moduleModalTitle').textContent = 'Add New Module';
+      document.getElementById('moduleSubmitLabel').textContent = 'Save Module';
+      openModal('addModuleModal');
+    }
+
+    function openEditModule(idx) {
+      const module = state.modules[idx];
+      document.getElementById('mTitle').value = module.title || '';
+      document.getElementById('mCode').value = module.code || '';
+      document.getElementById('mInstructor').value = module.instructor || '';
+      document.getElementById('mDesc').value = module.desc || '';
+      document.getElementById('mEditIndex').value = idx;
+      document.getElementById('moduleModalTitle').textContent = 'Edit Module';
+      document.getElementById('moduleSubmitLabel').textContent = 'Update Module';
+      openModal('addModuleModal');
+    }
+
+    function saveModule(e) {
+      e.preventDefault();
+      const editIndex = document.getElementById('mEditIndex').value;
+      const previous = editIndex === '' ? null : state.modules[Number(editIndex)];
+      const newModule = {
+        title: document.getElementById('mTitle').value,
+        code: document.getElementById('mCode').value,
+        instructor: document.getElementById('mInstructor').value,
+        desc: document.getElementById('mDesc').value,
+        docs: previous ? (previous.docs || []) : []
+      };
+      if (previous) {
+        state.modules[Number(editIndex)] = newModule;
+        activeModuleIndex = Number(editIndex);
+        logActivity(`Updated Module: ${newModule.title}`);
+      } else {
+        state.modules.push(newModule);
+        activeModuleIndex = state.modules.length - 1;
+        logActivity(`Added Module: ${newModule.title}`);
+      }
+      closeModal('addModuleModal');
+      e.target.reset();
+      document.getElementById('mEditIndex').value = '';
+      document.getElementById('moduleModalTitle').textContent = 'Add New Module';
+      document.getElementById('moduleSubmitLabel').textContent = 'Save Module';
+      saveState();
+    }
+
+    function deleteModule(idx) {
+      const name = state.modules[idx].title;
+      state.modules.splice(idx, 1);
+      activeModuleIndex = Math.min(activeModuleIndex, Math.max(0, state.modules.length - 1));
+      logActivity(`Deleted Module: ${name}`);
+      saveState();
+    }
+
+    function openUploadModuleDoc(idx) {
+      document.getElementById('targetModuleId').value = idx;
+      openModal('uploadModuleDocModal');
+    }
+
+    async function saveModuleDoc(e) {
+      e.preventDefault();
+      const idx = Number(document.getElementById('targetModuleId').value);
+      const name = document.getElementById('mdName').value;
+      const fileInput = document.getElementById('mdFile').files[0];
+
+      if (!fileInput || !state.modules[idx]) return;
+      const fileRes = await fileToBase64(fileInput);
+      if(!state.modules[idx].docs) state.modules[idx].docs = [];
+      state.modules[idx].docs.push({ name: name, file: fileRes });
+      activeModuleIndex = idx;
+      logActivity(`Uploaded document to ${state.modules[idx].title}`);
+      closeModal('uploadModuleDocModal');
+      e.target.reset();
+      saveState();
+    }
+
+    function deleteModuleDoc(moduleIndex, documentIndex) {
+      const module = state.modules[moduleIndex];
+      if (!module || !module.docs || !module.docs[documentIndex]) return;
+      const name = module.docs[documentIndex].name;
+      module.docs.splice(documentIndex, 1);
+      activeModuleIndex = moduleIndex;
+      logActivity(`Deleted module document: ${name}`);
+      saveState();
+    }
+
+    async function saveLab(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('lFile').files[0];
+      let fileRes = null;
+      if(fileInput) fileRes = await fileToBase64(fileInput);
+
+      const lab = {
+        title: document.getElementById('lTitle').value,
+        status: document.getElementById('lStatus').value,
+        code: document.getElementById('lCode').value,
+        github: document.getElementById('lGithub').value,
+        file: fileRes
+      };
+      state.labs.push(lab);
+      logActivity(`Added Lab Experiment: ${lab.title}`);
+      closeModal('addLabModal');
+      e.target.reset();
+      saveState();
+    }
+
+    function deleteLab(idx) {
+      state.labs.splice(idx, 1);
+      saveState();
+    }
+
+    async function saveAssignment(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('aFile').files[0];
+      let fileRes = null;
+      if(fileInput) fileRes = await fileToBase64(fileInput);
+
+      const item = {
+        title: document.getElementById('aTitle').value,
+        dueDate: document.getElementById('aDueDate').value,
+        priority: document.getElementById('aPriority').value,
+        status: document.getElementById('aStatus').value,
+        file: fileRes
+      };
+      state.assignments.push(item);
+      logActivity(`Added Assignment: ${item.title}`);
+      closeModal('addAssignmentModal');
+      e.target.reset();
+      saveState();
+    }
+
+    function deleteAssignment(idx) {
+      state.assignments.splice(idx, 1);
+      saveState();
+    }
+
+    async function saveProject(e) {
+      e.preventDefault();
+      const editIndex = document.getElementById('pEditIndex').value;
+      const previous = editIndex === '' ? null : state.projects[Number(editIndex)];
+      const fileInput = document.getElementById('pFile').files[0];
+      const folderInput = Array.from(document.getElementById('pFolder').files);
+      let folderFiles = previous && previous.files ? previous.files : [];
+      if (folderInput.length) {
+        folderFiles = await Promise.all(folderInput.map(async file => ({
+          ...await fileToBase64(file),
+          relativePath: file.webkitRelativePath || file.name
+        })));
+      }
+      const techStr = document.getElementById('pTech').value;
+      const proj = {
+        title: document.getElementById('pTitle').value,
+        summary: document.getElementById('pSummary').value,
+        tech: techStr ? techStr.split(',').map(value => value.trim()).filter(Boolean) : [],
+        github: document.getElementById('pGithub').value,
+        demo: document.getElementById('pDemo').value,
+        file: fileInput ? await fileToBase64(fileInput) : previous ? previous.file : null,
+        files: folderFiles
+      };
+      if (previous) {
+        state.projects[Number(editIndex)] = proj;
+        logActivity(`Updated Portfolio Project: ${proj.title}`);
+      } else {
+        state.projects.push(proj);
+        logActivity(`Added Portfolio Project: ${proj.title}`);
+      }
+      closeModal('addProjectModal');
+      e.target.reset();
+      document.getElementById('pEditIndex').value = '';
+      document.querySelector('#addProjectModal h3').textContent = 'Add Portfolio Project';
+      e.target.querySelector('button[type="submit"]').textContent = 'Save Project';
+      saveState();
+    }
+
+    function openEditProject(idx) {
+      const project = state.projects[idx];
+      document.getElementById('pTitle').value = project.title || '';
+      document.getElementById('pSummary').value = project.summary || '';
+      document.getElementById('pTech').value = (project.tech || []).join(', ');
+      document.getElementById('pGithub').value = project.github || '';
+      document.getElementById('pDemo').value = project.demo || '';
+      document.getElementById('pFile').value = '';
+      document.getElementById('pFolder').value = '';
+      document.getElementById('pEditIndex').value = idx;
+      document.querySelector('#addProjectModal h3').textContent = 'Edit Portfolio Project';
+      document.querySelector('#addProjectModal button[type="submit"]').textContent = 'Update Project';
+      openModal('addProjectModal');
+    }
+
+    function openNewProjectModal() {
+      const form = document.querySelector('#addProjectModal form');
+      form.reset();
+      document.getElementById('pEditIndex').value = '';
+      document.querySelector('#addProjectModal h3').textContent = 'Add Portfolio Project';
+      form.querySelector('button[type="submit"]').textContent = 'Save Project';
+      openModal('addProjectModal');
+    }
+
+    function deleteProject(idx) {
+      const name = state.projects[idx].title;
+      state.projects.splice(idx, 1);
+      logActivity(`Deleted Portfolio Project: ${name}`);
+      saveState();
+    }
+
+    function openNewToolModal() {
+      const form = document.querySelector('#addToolModal form');
+      form.reset();
+      document.getElementById('tEditIndex').value = '';
+      document.querySelector('#addToolModal h3').textContent = 'Add Toolstack Item';
+      form.querySelector('button[type="submit"]').textContent = 'Save Tool';
+      openModal('addToolModal');
+    }
+
+    function openEditTool(idx) {
+      const tool = state.tools[idx];
+      document.getElementById('tName').value = tool.name || '';
+      document.getElementById('tCat').value = tool.category || '';
+      document.getElementById('tUrl').value = tool.url || '';
+      document.getElementById('tNotes').value = tool.notes || '';
+      document.getElementById('tTutorial').value = tool.tutorial || '';
+      document.getElementById('tFile').value = '';
+      document.getElementById('tEditIndex').value = idx;
+      document.querySelector('#addToolModal h3').textContent = 'Edit Tool';
+      document.querySelector('#addToolModal button[type="submit"]').textContent = 'Update Tool';
+      openModal('addToolModal');
+    }
+
+    async function saveTool(e) {
+      e.preventDefault();
+      const editIndex = document.getElementById('tEditIndex').value;
+      const previous = editIndex === '' ? null : state.tools[Number(editIndex)];
+      const fileInput = document.getElementById('tFile').files[0];
+      const tool = {
+        name: document.getElementById('tName').value,
+        category: document.getElementById('tCat').value,
+        url: document.getElementById('tUrl').value,
+        notes: document.getElementById('tNotes').value,
+        tutorial: document.getElementById('tTutorial').value.trim(),
+        file: fileInput ? await fileToBase64(fileInput) : previous ? previous.file : null
+      };
+      if (previous) {
+        state.tools[Number(editIndex)] = tool;
+        activeToolIndex = Number(editIndex);
+        logActivity(`Updated Tool: ${tool.name}`);
+      } else {
+        state.tools.push(tool);
+        activeToolIndex = state.tools.length - 1;
+        logActivity(`Added Tool: ${tool.name}`);
+      }
+      closeModal('addToolModal');
+      e.target.reset();
+      document.getElementById('tEditIndex').value = '';
+      document.querySelector('#addToolModal h3').textContent = 'Add Toolstack Item';
+      e.target.querySelector('button[type="submit"]').textContent = 'Save Tool';
+      saveState();
+    }
+
+    function deleteTool(idx) {
+      const name = state.tools[idx].name;
+      state.tools.splice(idx, 1);
+      activeToolIndex = Math.min(activeToolIndex, Math.max(0, state.tools.length - 1));
+      logActivity(`Deleted Tool: ${name}`);
+      saveState();
+    }
+
+    async function saveResource(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('rFile').files[0];
+      let fileRes = null;
+      if(fileInput) fileRes = await fileToBase64(fileInput);
+
+      const res = {
+        title: document.getElementById('rTitle').value,
+        category: document.getElementById('rCat').value,
+        url: document.getElementById('rUrl').value,
+        file: fileRes
+      };
+      state.resources.push(res);
+      logActivity(`Added Resource: ${res.title}`);
+      closeModal('addResourceModal');
+      e.target.reset();
+      saveState();
+    }
+
+    function deleteResource(idx) {
+      state.resources.splice(idx, 1);
+      saveState();
+    }
+
+    async function saveProfile(e) {
+      e.preventDefault();
+      const updatedProfile = {
+        ...state.profile,
+        name: document.getElementById('epName').value,
+        regNo: document.getElementById('epRegNo').value,
+        dept: document.getElementById('epDept').value,
+        section: document.getElementById('epSec').value,
+        subject: document.getElementById('epSubject').value,
+        supervisor: document.getElementById('epSupervisor').value,
+        github: document.getElementById('epGithub').value,
+        linkedin: document.getElementById('epLinkedin').value,
+        email: document.getElementById('epEmail').value
+      };
+
+      const avatarFile = document.getElementById('epAvatarFile').files[0];
+      if(avatarFile) {
+        const res = await fileToBase64(avatarFile);
+        updatedProfile.avatar = res.data;
+      }
+
+      state.profile = updatedProfile;
+      logActivity('Updated Academic Profile Details');
+      if (await saveState()) closeModal('editProfileModal');
+    }
+  </script>
+</body>
+</html>
