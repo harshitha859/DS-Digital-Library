@@ -186,6 +186,9 @@
                 <p class="mt-2 text-xs">Your ID card image will appear here</p>
               </div>
             </div>
+            <label for="collegeIdInput" class="mt-3 block text-xs font-semibold text-[#1E3A5F]">Choose ID card photo</label>
+            <input type="file" id="collegeIdInput" accept="image/*" onchange="uploadCollegeId(event)" class="mt-1 w-full text-xs text-slate-500"/>
+            <p class="mt-1 text-[10px] text-slate-500">Saved only in this browser, not uploaded to GitHub.</p>
           </div>
         </aside>
         <div class="space-y-6">
@@ -355,14 +358,11 @@
 
     <!-- ================= 5. ASSIGNMENTS SECTION ================= -->
     <section id="assignments" class="app-page space-y-6">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
         <div>
-          <h2 class="text-xl font-bold text-slate-900">Assignments Tracker</h2>
-          <p class="text-xs text-slate-500">Academic tasks, due dates, and solution uploads.</p>
+          <h2 class="text-xl font-bold text-slate-900">Course Assignments</h2>
+          <p class="text-xs text-slate-500">Browse assignment PDFs by module in the interactive flipbook.</p>
         </div>
-        <button onclick="openModal('addAssignmentModal')" class="bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md flex items-center space-x-2 transition">
-          <i class="fa-solid fa-plus"></i><span>Add Assignment</span>
-        </button>
       </div>
 
       <div id="assignmentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -444,7 +444,7 @@
     <section id="profile" class="app-page bg-white border border-[#1E3A5F]/20 100 rounded-3xl p-6 sm:p-8 shadow-sm">
       <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 pb-6 border-b border-slate-100">
         <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
-          <img id="profileAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Student Profile" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-sky-100 shadow-md"/>
+          <img id="profileAvatar" src="./assets/profile-placeholder.svg" alt="Student Profile" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-sky-100 shadow-md"/>
           <div>
             <h2 id="profName" class="text-2xl font-bold text-slate-900">Mandem Harshitha</h2>
             <p id="profRegNo" class="text-sm font-mono text-[#1E3A5F] font-semibold mb-2">Registration No: 24102A030144</p>
@@ -582,52 +582,6 @@
         <div class="pt-2 flex justify-end space-x-2">
           <button type="button" onclick="closeModal('addLabModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
           <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Experiment</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Add Assignment Modal -->
-  <div id="addAssignmentModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#1E3A5F]/20 100">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-sm font-bold text-slate-900">Add Academic Assignment</h3>
-        <button onclick="closeModal('addAssignmentModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form onsubmit="saveAssignment(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block font-medium mb-1">Assignment Title</label>
-          <input type="text" id="aTitle" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium mb-1">Due Date</label>
-            <input type="date" id="aDueDate" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
-          </div>
-          <div>
-            <label class="block font-medium mb-1">Priority</label>
-            <select id="aPriority" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500">
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="block font-medium mb-1">Status</label>
-          <select id="aStatus" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500">
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Submitted">Submitted</option>
-          </select>
-        </div>
-        <div>
-          <label class="block font-medium mb-1">Upload Solution/File</label>
-          <input type="file" id="aFile" class="w-full text-slate-500 text-xs"/>
-        </div>
-        <div class="pt-2 flex justify-end space-x-2">
-          <button type="button" onclick="closeModal('addAssignmentModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#1E3A5F] to-[#2D5A8C] hover:shadow-lg text-white rounded-lg font-semibold">Save Assignment</button>
         </div>
       </form>
     </div>
@@ -805,7 +759,7 @@
           <input type="email" id="epEmail" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
         </div>
         <div>
-          <label class="block font-medium mb-1">Upload New Avatar Photo</label>
+          <label class="block font-medium mb-1">Upload Profile Photo (saved only in this browser)</label>
           <input type="file" id="epAvatarFile" accept="image/*" class="w-full text-slate-500 text-xs"/>
         </div>
         <div class="pt-2 flex justify-end space-x-2">
@@ -890,6 +844,11 @@
       { title: 'Statistical Thinking', code: 'Module 4', instructor: '', desc: 'Apply statistical reasoning to interpret patterns, uncertainty, and evidence.', docs: [{ name: 'Module 4 Course Material', file: { name: 'module-4-ds.pdf', type: 'application/pdf', url: './assets/module-4-ds.pdf' } }] },
       { title: 'Dimensionality Reduction', code: 'Module 5', instructor: '', desc: 'Reduce feature complexity while preserving the most useful information.', docs: [{ name: 'Module 5 Course Material', file: { name: 'module-5-ds.pdf', type: 'application/pdf', url: './assets/module-5-ds.pdf' } }] }
     ];
+    const defaultAssignments = [
+      { id: 'module-1-assignment-1', title: 'Assignment 1', module: 'Module 1', file: { name: 'assignment-1.pdf', type: 'application/pdf', url: './assets/assignment-1.pdf' } },
+      { id: 'module-2-assignment-2', title: 'Assignment 2', module: 'Module 2', file: { name: 'assignment-2.pdf', type: 'application/pdf', url: './assets/assignment-2.pdf' } },
+      { id: 'module-3-assignment-3', title: 'Assignment 3', module: 'Module 3', file: { name: 'assignment-3.pdf', type: 'application/pdf', url: './assets/assignment-3.pdf' } }
+    ];
 
     // App State Management via LocalStorage
     let state = {
@@ -903,12 +862,12 @@
         github: 'https://github.com',
         linkedin: 'https://linkedin.com',
         email: '',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+        avatar: './assets/profile-placeholder.svg',
         logo: 'https://via.placeholder.com/40/4D0E13/FFFFFF?text=DS'
       },
       modules: defaultModules.map(module => ({ ...module, docs: module.docs || [] })),
       labs: [],
-      assignments: [],
+      assignments: defaultAssignments.map(assignment => ({ ...assignment, file: { ...assignment.file } })),
       projects: [],
       tools: [
         { name: 'Python', category: 'Programming', url: 'https://www.python.org/', notes: 'Core language for scripting, analysis, automation, and machine learning.', tutorial: 'Python for data science beginner tutorial' },
@@ -975,6 +934,9 @@
 
     function mergeSavedProfile(defaultProfile, savedProfile) {
       const profile = { ...defaultProfile, ...(savedProfile || {}) };
+      if (profile.avatar === 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150') {
+        profile.avatar = defaultProfile.avatar;
+      }
       if (savedProfile && savedProfile.name === 'Alex Rivera' && savedProfile.regNo === 'DS-2024-8841') {
         Object.assign(profile, {
           name: defaultProfile.name,
@@ -1007,6 +969,17 @@
       return updated;
     }
 
+    function mergeDefaultAssignments() {
+      let updated = false;
+      if (!Array.isArray(state.assignments)) state.assignments = [];
+      for (const assignment of defaultAssignments) {
+        if (state.assignments.some(saved => saved.id === assignment.id)) continue;
+        state.assignments.push({ ...assignment, file: { ...assignment.file } });
+        updated = true;
+      }
+      return updated;
+    }
+
     function openStateDatabase() {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open('digital-library', 1);
@@ -1032,6 +1005,7 @@
             state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
           }
           const moduleDocsUpdated = mergeDefaultModuleDocuments();
+          const assignmentsUpdated = mergeDefaultAssignments();
           if ((saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion) {
             const existingTools = new Set(state.tools.map(tool => tool.name.toLowerCase()));
             state.tools.push(...defaults.tools.filter(tool => !existingTools.has(tool.name.toLowerCase())));
@@ -1042,7 +1016,7 @@
             state.resources = [...(state.resources || []), ...defaults.resources.filter(resource => !existingResources.has(resource.title.toLowerCase()))];
             state.resourceCatalogVersion = defaults.resourceCatalogVersion;
           }
-          if (hasPlaceholderProfile || moduleDocsUpdated || (saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion || (saved.resourceCatalogVersion || 0) < defaults.resourceCatalogVersion) {
+          if (hasPlaceholderProfile || moduleDocsUpdated || assignmentsUpdated || (saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion || (saved.resourceCatalogVersion || 0) < defaults.resourceCatalogVersion) {
             await persistState(db);
           }
         }
@@ -1055,6 +1029,7 @@
               state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
             }
             mergeDefaultModuleDocuments();
+            mergeDefaultAssignments();
             const existingTools = new Set(state.tools.map(tool => tool.name.toLowerCase()));
             state.tools.push(...defaults.tools.filter(tool => !existingTools.has(tool.name.toLowerCase())));
             state.toolCatalogVersion = defaults.toolCatalogVersion;
@@ -1077,6 +1052,7 @@
               state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
             }
             mergeDefaultModuleDocuments();
+            mergeDefaultAssignments();
           }
         } catch (fallbackError) {
           console.error('Could not load legacy library data:', fallbackError);
@@ -1724,28 +1700,21 @@
       // Assignments Render
       const aGrid = document.getElementById('assignmentsGrid');
       if (state.assignments.length === 0) {
-        aGrid.innerHTML = getEmptyStateHTML('No Assignments Tracked', 'Organize coursework submissions and due dates.', 'Add Assignment', 'addAssignmentModal');
+        aGrid.innerHTML = `<div class="col-span-full rounded-2xl border border-slate-100 bg-white p-6 text-center text-xs text-slate-500">No assignment PDFs are available.</div>`;
       } else {
         aGrid.innerHTML = state.assignments.map((a, idx) => `
           <div class="bg-white border border-[#1E3A5F]/20 100 p-5 rounded-2xl shadow-sm space-y-3">
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                  a.priority === 'High' ? 'bg-red-100 text-red-700' :
-                  a.priority === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'
-                }">${a.priority} Priority</span>
-                <h3 class="font-bold text-slate-900 text-sm mt-1">${escapeHtml(a.title)}</h3>
-              </div>
+            <div>
+              ${a.module ? `<span class="inline-flex rounded-lg bg-[#FFF2BA]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]">${escapeHtml(a.module)}</span>` : ''}
+              <h3 class="font-bold text-slate-900 text-sm mt-2">${escapeHtml(a.title)}</h3>
             </div>
-            <div class="text-xs text-slate-500 space-y-1">
-              <p><i class="fa-regular fa-calendar mr-1 text-[#1E3A5F]"></i>Due: ${a.dueDate}</p>
-              <p><i class="fa-solid fa-spinner mr-1 text-[#1E3A5F]"></i>Status: <strong class="text-slate-700">${a.status}</strong></p>
-            </div>
+            ${a.dueDate ? `<p class="text-xs text-slate-500"><i class="fa-regular fa-calendar mr-1 text-[#1E3A5F]"></i>Due: ${escapeHtml(a.dueDate)}</p>` : ''}
+            ${a.status ? `<p class="text-xs text-slate-500"><i class="fa-solid fa-spinner mr-1 text-[#1E3A5F]"></i>Status: <strong class="text-slate-700">${escapeHtml(a.status)}</strong></p>` : ''}
             ${a.file ? `
               <div class="flex gap-2">
-                ${isPdfFile(a.file) ? `<button type="button" onclick="viewAssignmentAttachment(${idx})" class="flex-1 text-center py-2 bg-[#FFF2BA]/20 text-[#1E3A5F] rounded-xl font-semibold text-xs">View PDF</button>` : ''}
-                <a href="${a.file.data}" download="${escapeHtml(a.file.name)}" class="flex-1 text-center py-2 bg-sky-50 text-[#1E3A5F] rounded-xl font-semibold text-xs hover:bg-[#FFF2BA]/20 transition">
-                  <i class="fa-solid fa-paperclip mr-1"></i>Download Attachment
+                ${isPdfFile(a.file) ? `<button type="button" onclick="viewAssignmentAttachment(${idx})" class="flex-1 text-center py-2 bg-[#FFF2BA]/20 text-[#1E3A5F] rounded-xl font-semibold text-xs"><i class="fa-solid fa-book-open mr-1"></i>Open flipbook</button>` : ''}
+                <a href="${escapeHtml(a.file.url || a.file.data)}" download="${escapeHtml(a.file.name)}" class="flex-1 text-center py-2 bg-sky-50 text-[#1E3A5F] rounded-xl font-semibold text-xs hover:bg-[#FFF2BA]/20 transition">
+                  <i class="fa-solid fa-paperclip mr-1"></i>Download PDF
                 </a>
               </div>
             ` : ''}
@@ -2220,26 +2189,6 @@
 
     function deleteLab(idx) {
       state.labs.splice(idx, 1);
-      saveState();
-    }
-
-    async function saveAssignment(e) {
-      e.preventDefault();
-      const fileInput = document.getElementById('aFile').files[0];
-      let fileRes = null;
-      if(fileInput) fileRes = await fileToBase64(fileInput);
-
-      const item = {
-        title: document.getElementById('aTitle').value,
-        dueDate: document.getElementById('aDueDate').value,
-        priority: document.getElementById('aPriority').value,
-        status: document.getElementById('aStatus').value,
-        file: fileRes
-      };
-      state.assignments.push(item);
-      logActivity(`Added Assignment: ${item.title}`);
-      closeModal('addAssignmentModal');
-      e.target.reset();
       saveState();
     }
 
