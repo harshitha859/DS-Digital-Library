@@ -186,9 +186,11 @@
                 <p class="mt-2 text-xs">Your ID card image will appear here</p>
               </div>
             </div>
-            <label for="collegeIdInput" class="mt-3 block text-xs font-semibold text-[#1E3A5F]">Choose ID card photo</label>
-            <input type="file" id="collegeIdInput" accept="image/*" onchange="uploadCollegeId(event)" class="mt-1 w-full text-xs text-slate-500"/>
-            <p class="mt-1 text-[10px] text-slate-500">Saved only in this browser, not uploaded to GitHub.</p>
+            <div id="collegeIdUpload">
+              <label for="collegeIdInput" class="mt-3 block text-xs font-semibold text-[#1E3A5F]">Add ID card photo</label>
+              <input type="file" id="collegeIdInput" accept="image/*" onchange="uploadCollegeId(event)" class="mt-1 w-full text-xs text-slate-500"/>
+              <p class="mt-1 text-[10px] text-slate-500">Saved only in this browser. It cannot be changed or removed here.</p>
+            </div>
           </div>
         </aside>
         <div class="space-y-6">
@@ -444,7 +446,14 @@
     <section id="profile" class="app-page bg-white border border-[#1E3A5F]/20 100 rounded-3xl p-6 sm:p-8 shadow-sm">
       <div class="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 pb-6 border-b border-slate-100">
         <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
-          <img id="profileAvatar" src="./assets/profile-placeholder.svg" alt="Student Profile" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-sky-100 shadow-md"/>
+          <div class="flex flex-col items-center gap-2">
+            <img id="profileAvatar" src="./assets/profile-placeholder.svg" alt="Student Profile" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-sky-100 shadow-md"/>
+            <div id="profilePhotoUpload">
+              <label for="profilePhotoInput" class="cursor-pointer text-xs font-semibold text-[#1E3A5F] hover:underline">Add profile photo</label>
+              <input type="file" id="profilePhotoInput" accept="image/*" onchange="uploadProfilePhoto(event)" class="mt-1 block w-full max-w-48 text-[10px] text-slate-500"/>
+              <p class="text-[10px] text-slate-500">Saved only in this browser. It cannot be changed or removed here.</p>
+            </div>
+          </div>
           <div>
             <h2 id="profName" class="text-2xl font-bold text-slate-900">Mandem Harshitha</h2>
             <p id="profRegNo" class="text-sm font-mono text-[#1E3A5F] font-semibold mb-2">Registration No: 24102A030144</p>
@@ -757,10 +766,6 @@
         <div>
           <label class="block font-medium mb-1">Email Address</label>
           <input type="email" id="epEmail" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#1E3A5F]/20 500"/>
-        </div>
-        <div>
-          <label class="block font-medium mb-1">Upload Profile Photo (saved only in this browser)</label>
-          <input type="file" id="epAvatarFile" accept="image/*" class="w-full text-slate-500 text-xs"/>
         </div>
         <div class="pt-2 flex justify-end space-x-2">
           <button type="button" onclick="closeModal('editProfileModal')" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600">Cancel</button>
@@ -1122,7 +1127,6 @@
       document.getElementById('epGithub').value = profile.github || '';
       document.getElementById('epLinkedin').value = profile.linkedin || '';
       document.getElementById('epEmail').value = profile.email || '';
-      document.getElementById('epAvatarFile').value = '';
       openModal('editProfileModal');
     }
 
@@ -1629,6 +1633,7 @@
       renderResume();
 
       document.getElementById('profileAvatar').src = state.profile.avatar;
+      document.getElementById('profilePhotoUpload').classList.toggle('hidden', state.profile.avatar !== './assets/profile-placeholder.svg');
       document.getElementById('profName').innerText = state.profile.name;
       document.getElementById('profRegNo').innerText = 'Registration No: ' + state.profile.regNo;
       document.getElementById('profDept').innerText = state.profile.dept;
@@ -2034,8 +2039,10 @@
 
     function renderCollegeId() {
       const preview = document.getElementById('collegeIdPreview');
+      const hasSavedId = Boolean(state.collegeId && (state.collegeId.type || '').startsWith('image/') && state.collegeId.data);
+      document.getElementById('collegeIdUpload').classList.toggle('hidden', hasSavedId);
       preview.replaceChildren();
-      if (!state.collegeId || !(state.collegeId.type || '').startsWith('image/')) {
+      if (!hasSavedId) {
         preview.innerHTML = `<div class="px-4 py-8 text-center text-slate-400">
           <i class="fa-regular fa-id-card text-3xl"></i>
           <p class="mt-2 text-xs">Your ID card image will appear here</p>
@@ -2054,17 +2061,47 @@
       const file = input.files[0];
       input.value = '';
       if (!file) return;
+      if (state.collegeId && (state.collegeId.type || '').startsWith('image/')) return;
       if (!file.type.startsWith('image/')) {
         alert('Choose an image file for your college ID card.');
         return;
       }
       try {
+        const previousId = state.collegeId;
         state.collegeId = await fileToBase64(file);
         logActivity('Uploaded College ID Card');
-        await saveState();
+        if (!(await saveState())) {
+          state.collegeId = previousId;
+          renderAll();
+        }
       } catch (error) {
         console.error('Could not read college ID card:', error);
         alert('Could not read this ID card image. Please try another image.');
+      }
+    }
+
+    async function uploadProfilePhoto(event) {
+      const input = event.target;
+      const file = input.files[0];
+      input.value = '';
+      if (!file) return;
+      if (state.profile.avatar !== './assets/profile-placeholder.svg') return;
+      if (!file.type.startsWith('image/')) {
+        alert('Choose an image file for your profile photo.');
+        return;
+      }
+      try {
+        const previousAvatar = state.profile.avatar;
+        const photo = await fileToBase64(file);
+        state.profile.avatar = photo.data;
+        logActivity('Added Profile Photo');
+        if (!(await saveState())) {
+          state.profile.avatar = previousAvatar;
+          renderAll();
+        }
+      } catch (error) {
+        console.error('Could not read profile photo:', error);
+        alert('Could not read this profile photo. Please try another image.');
       }
     }
 
@@ -2360,12 +2397,6 @@
         linkedin: document.getElementById('epLinkedin').value,
         email: document.getElementById('epEmail').value
       };
-
-      const avatarFile = document.getElementById('epAvatarFile').files[0];
-      if(avatarFile) {
-        const res = await fileToBase64(avatarFile);
-        updatedProfile.avatar = res.data;
-      }
 
       state.profile = updatedProfile;
       logActivity('Updated Academic Profile Details');
