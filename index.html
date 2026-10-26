@@ -446,11 +446,11 @@
         <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
           <img id="profileAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Student Profile" class="w-24 h-24 rounded-2xl object-cover ring-4 ring-sky-100 shadow-md"/>
           <div>
-            <h2 id="profName" class="text-2xl font-bold text-slate-900">Alex Rivera</h2>
-            <p id="profRegNo" class="text-sm font-mono text-[#1E3A5F] font-semibold mb-2">Registration No: DS-2024-8841</p>
+            <h2 id="profName" class="text-2xl font-bold text-slate-900">Mandem Harshitha</h2>
+            <p id="profRegNo" class="text-sm font-mono text-[#1E3A5F] font-semibold mb-2">Registration No: 24102A030144</p>
             <div class="flex flex-wrap justify-center sm:justify-start gap-2">
-              <span id="profDept" class="px-2.5 py-1 bg-sky-50 text-[#1E3A5F] text-[11px] font-medium rounded-lg">Dept. of Data Science</span>
-              <span id="profSec" class="px-2.5 py-1 bg-slate-100 text-slate-700 text-[11px] font-medium rounded-lg">Section: B</span>
+              <span id="profDept" class="px-2.5 py-1 bg-sky-50 text-[#1E3A5F] text-[11px] font-medium rounded-lg">Data Science</span>
+              <span id="profSec" class="px-2.5 py-1 bg-slate-100 text-slate-700 text-[11px] font-medium rounded-lg">Section: 3</span>
             </div>
           </div>
         </div>
@@ -482,8 +482,8 @@
         <div class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-3 text-xs">
-              <p><strong class="text-slate-500">Current Subject / Focus:</strong> <span id="profSubject" class="text-slate-800 font-medium">Advanced Neural Networks & Analytics</span></p>
-              <p><strong class="text-slate-500">Faculty Supervisor:</strong> <span id="profSupervisor" class="text-slate-800 font-medium">Dr. Eleanor Vance, Ph.D.</span></p>
+              <p><strong class="text-slate-500">Current Subject / Focus:</strong> <span id="profSubject" class="text-slate-800 font-medium">Data Science</span></p>
+              <p><strong class="text-slate-500">Faculty Supervisor:</strong> <span id="profSupervisor" class="text-slate-800 font-medium">S.Bosu Babu</span></p>
             </div>
 
             <div class="flex items-center justify-start md:justify-end space-x-3">
@@ -894,15 +894,15 @@
     // App State Management via LocalStorage
     let state = {
       profile: {
-        name: 'Alex Rivera',
-        regNo: 'DS-2024-8841',
-        dept: 'Dept. of Data Science',
-        section: 'B',
-        subject: 'Advanced Neural Networks & Analytics',
-        supervisor: 'Dr. Eleanor Vance, Ph.D.',
+        name: 'Mandem Harshitha',
+        regNo: '24102A030144',
+        dept: 'Data Science',
+        section: '3',
+        subject: 'Data Science',
+        supervisor: 'S.Bosu Babu',
         github: 'https://github.com',
         linkedin: 'https://linkedin.com',
-        email: 'alex.rivera@university.edu',
+        email: '',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
         logo: 'https://via.placeholder.com/40/4D0E13/FFFFFF?text=DS'
       },
@@ -1615,7 +1615,9 @@
       document.getElementById('profSupervisor').innerText = state.profile.supervisor;
       document.getElementById('linkGithub').href = getSafeExternalUrl(state.profile.github) || '#';
       document.getElementById('linkLinkedin').href = getSafeExternalUrl(state.profile.linkedin) || '#';
-      document.getElementById('linkEmail').href = 'mailto:' + (state.profile.email || '');
+      const emailLink = document.getElementById('linkEmail');
+      emailLink.href = state.profile.email ? 'mailto:' + state.profile.email : '#';
+      emailLink.classList.toggle('hidden', !state.profile.email);
 
       // Counters
       document.getElementById('cntModules').innerText = state.modules.length;
