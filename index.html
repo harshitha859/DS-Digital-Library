@@ -884,11 +884,11 @@
       { name: 'Tab-delimited File', file: 'tab_limited_file.py' }
     ];
     const defaultModules = [
-      { title: 'Data Science Skills, Tools and Data Analysis', code: 'Module 1', instructor: '', desc: 'Build core data science foundations, tools, and analysis workflows.', docs: [] },
-      { title: 'Data Extraction', code: 'Module 2', instructor: '', desc: 'Learn how to gather, clean, and prepare raw data for analysis.', docs: [] },
-      { title: 'Data Visualization', code: 'Module 3', instructor: '', desc: 'Present insights through effective charts, dashboards, and storytelling.', docs: [] },
-      { title: 'Statistical Thinking', code: 'Module 4', instructor: '', desc: 'Apply statistical reasoning to interpret patterns, uncertainty, and evidence.', docs: [] },
-      { title: 'Dimensionality Reduction', code: 'Module 5', instructor: '', desc: 'Reduce feature complexity while preserving the most useful information.', docs: [] }
+      { title: 'Data Science Skills, Tools and Data Analysis', code: 'Module 1', instructor: '', desc: 'Build core data science foundations, tools, and analysis workflows.', docs: [{ name: 'Module 1 Course Material', file: { name: 'module-1-ds.pdf', type: 'application/pdf', url: './assets/module-1-ds.pdf' } }] },
+      { title: 'Data Extraction', code: 'Module 2', instructor: '', desc: 'Learn how to gather, clean, and prepare raw data for analysis.', docs: [{ name: 'Module 2 Course Material', file: { name: 'module-2-ds.pdf', type: 'application/pdf', url: './assets/module-2-ds.pdf' } }] },
+      { title: 'Data Visualization', code: 'Module 3', instructor: '', desc: 'Present insights through effective charts, dashboards, and storytelling.', docs: [{ name: 'Module 3 Course Material', file: { name: 'module-3-ds.pdf', type: 'application/pdf', url: './assets/module-3-ds.pdf' } }] },
+      { title: 'Statistical Thinking', code: 'Module 4', instructor: '', desc: 'Apply statistical reasoning to interpret patterns, uncertainty, and evidence.', docs: [{ name: 'Module 4 Course Material', file: { name: 'module-4-ds.pdf', type: 'application/pdf', url: './assets/module-4-ds.pdf' } }] },
+      { title: 'Dimensionality Reduction', code: 'Module 5', instructor: '', desc: 'Reduce feature complexity while preserving the most useful information.', docs: [{ name: 'Module 5 Course Material', file: { name: 'module-5-ds.pdf', type: 'application/pdf', url: './assets/module-5-ds.pdf' } }] }
     ];
 
     // App State Management via LocalStorage
@@ -989,6 +989,24 @@
       return profile;
     }
 
+    function mergeDefaultModuleDocuments() {
+      let updated = false;
+      for (const module of state.modules) {
+        const defaultModule = defaultModules.find(item => item.code === module.code);
+        if (!defaultModule) continue;
+        if (!Array.isArray(module.docs)) {
+          module.docs = [];
+          updated = true;
+        }
+        for (const doc of defaultModule.docs) {
+          if (module.docs.some(savedDoc => savedDoc.file && savedDoc.file.url === doc.file.url)) continue;
+          module.docs.push({ ...doc, file: { ...doc.file } });
+          updated = true;
+        }
+      }
+      return updated;
+    }
+
     function openStateDatabase() {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open('digital-library', 1);
@@ -1013,6 +1031,7 @@
           if (!state.modules || !state.modules.length) {
             state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
           }
+          const moduleDocsUpdated = mergeDefaultModuleDocuments();
           if ((saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion) {
             const existingTools = new Set(state.tools.map(tool => tool.name.toLowerCase()));
             state.tools.push(...defaults.tools.filter(tool => !existingTools.has(tool.name.toLowerCase())));
@@ -1023,7 +1042,7 @@
             state.resources = [...(state.resources || []), ...defaults.resources.filter(resource => !existingResources.has(resource.title.toLowerCase()))];
             state.resourceCatalogVersion = defaults.resourceCatalogVersion;
           }
-          if (hasPlaceholderProfile || (saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion || (saved.resourceCatalogVersion || 0) < defaults.resourceCatalogVersion) {
+          if (hasPlaceholderProfile || moduleDocsUpdated || (saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion || (saved.resourceCatalogVersion || 0) < defaults.resourceCatalogVersion) {
             await persistState(db);
           }
         }
@@ -1035,6 +1054,7 @@
             if (!state.modules || !state.modules.length) {
               state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
             }
+            mergeDefaultModuleDocuments();
             const existingTools = new Set(state.tools.map(tool => tool.name.toLowerCase()));
             state.tools.push(...defaults.tools.filter(tool => !existingTools.has(tool.name.toLowerCase())));
             state.toolCatalogVersion = defaults.toolCatalogVersion;
@@ -1056,6 +1076,7 @@
             if (!state.modules || !state.modules.length) {
               state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
             }
+            mergeDefaultModuleDocuments();
           }
         } catch (fallbackError) {
           console.error('Could not load legacy library data:', fallbackError);
@@ -1170,12 +1191,13 @@
         (file.type && file.type.toLowerCase().includes('pdf')) ||
         (file.name && file.name.toLowerCase().endsWith('.pdf')) ||
         (file.relativePath && file.relativePath.toLowerCase().endsWith('.pdf')) ||
+        (file.url && file.url.toLowerCase().endsWith('.pdf')) ||
         (typeof file.data === 'string' && file.data.startsWith('data:application/pdf;'))
       ));
     }
 
     async function viewFile(file) {
-      if (!file || !file.data || !isPdfFile(file)) {
+      if (!file || !(file.data || file.url) || !isPdfFile(file)) {
         alert('Preview is available for PDF files. Download this file to open it.');
         return;
       }
@@ -1191,7 +1213,7 @@
       activePdfDocument = null;
       status.textContent = 'Loading PDF preview...';
       status.classList.remove('hidden');
-      download.href = file.data;
+      download.href = file.url || file.data;
       download.download = file.name || 'document.pdf';
       download.classList.remove('hidden');
       const modal = document.getElementById('pdfViewerModal');
@@ -1199,10 +1221,17 @@
       modal.classList.add('flex');
       try {
         if (!window.pdfjsLib) throw new Error('The PDF viewer library did not load. Use the download link instead.');
-        const encodedData = file.data.includes(',') ? file.data.slice(file.data.indexOf(',') + 1) : file.data;
-        const binary = atob(encodedData);
-        const bytes = new Uint8Array(binary.length);
-        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        let bytes;
+        if (file.url) {
+          const response = await fetch(file.url);
+          if (!response.ok) throw new Error(`Could not load PDF (${response.status}).`);
+          bytes = new Uint8Array(await response.arrayBuffer());
+        } else {
+          const encodedData = file.data.includes(',') ? file.data.slice(file.data.indexOf(',') + 1) : file.data;
+          const binary = atob(encodedData);
+          bytes = new Uint8Array(binary.length);
+          for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        }
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
         if (requestId !== pdfRenderSequence) return;
@@ -1808,7 +1837,7 @@
           ${(module.docs || []).length ? `<div class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-100 bg-white">${module.docs.map((doc, docIndex) => `
             <div class="flex flex-wrap items-center justify-between gap-3 p-3">
               <button type="button" onclick="viewModuleDocument(${activeModuleIndex}, ${docIndex})" class="min-w-0 flex-1 text-left text-xs font-semibold text-[#1E3A5F] hover:underline"><i class="fa-regular ${isPdfFile(doc.file) ? 'fa-file-pdf' : 'fa-file-lines'} mr-2 text-[#1E3A5F]"></i>${escapeHtml(doc.name)}</button>
-                  <div class="flex items-center gap-3 text-xs">${isPdfFile(doc.file) ? `<button type="button" onclick="viewModuleDocument(${activeModuleIndex}, ${docIndex})" class="font-semibold text-[#1E3A5F] hover:underline"><i class="fa-solid fa-book-open mr-1"></i>Open flipbook</button>` : ''}<a href="${doc.file.data}" download="${escapeHtml(doc.file.name)}" class="text-[#1E3A5F] hover:underline">Download</a></div>
+                  <div class="flex items-center gap-3 text-xs">${isPdfFile(doc.file) ? `<button type="button" onclick="viewModuleDocument(${activeModuleIndex}, ${docIndex})" class="font-semibold text-[#1E3A5F] hover:underline"><i class="fa-solid fa-book-open mr-1"></i>Open flipbook</button>` : ''}<a href="${escapeHtml(doc.file.url || doc.file.data)}" download="${escapeHtml(doc.file.name)}" class="text-[#1E3A5F] hover:underline">Download</a></div>
             </div>
           `).join('')}</div>` : `<p class="mt-3 rounded-xl border border-dashed border-[#1E3A5F]/20 200 bg-white/70 p-5 text-center text-xs text-slate-500">No uploaded materials for this module.</p>`}
         </article>`;
