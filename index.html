@@ -973,6 +973,22 @@
     });
     window.addEventListener('hashchange', renderActivePage);
 
+    function mergeSavedProfile(defaultProfile, savedProfile) {
+      const profile = { ...defaultProfile, ...(savedProfile || {}) };
+      if (savedProfile && savedProfile.name === 'Alex Rivera' && savedProfile.regNo === 'DS-2024-8841') {
+        Object.assign(profile, {
+          name: defaultProfile.name,
+          regNo: defaultProfile.regNo,
+          dept: defaultProfile.dept,
+          section: defaultProfile.section,
+          subject: defaultProfile.subject,
+          supervisor: defaultProfile.supervisor
+        });
+        if (savedProfile.email === 'alex.rivera@university.edu') profile.email = defaultProfile.email;
+      }
+      return profile;
+    }
+
     function openStateDatabase() {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open('digital-library', 1);
@@ -992,7 +1008,8 @@
           request.onerror = () => reject(request.error);
         });
         if (saved) {
-          state = { ...defaults, ...saved, profile: { ...defaults.profile, ...(saved.profile || {}) } };
+          state = { ...defaults, ...saved, profile: mergeSavedProfile(defaults.profile, saved.profile) };
+          const hasPlaceholderProfile = saved.profile && saved.profile.name === 'Alex Rivera' && saved.profile.regNo === 'DS-2024-8841';
           if (!state.modules || !state.modules.length) {
             state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
           }
@@ -1006,7 +1023,7 @@
             state.resources = [...(state.resources || []), ...defaults.resources.filter(resource => !existingResources.has(resource.title.toLowerCase()))];
             state.resourceCatalogVersion = defaults.resourceCatalogVersion;
           }
-          if ((saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion || (saved.resourceCatalogVersion || 0) < defaults.resourceCatalogVersion) {
+          if (hasPlaceholderProfile || (saved.toolCatalogVersion || 0) < defaults.toolCatalogVersion || (saved.resourceCatalogVersion || 0) < defaults.resourceCatalogVersion) {
             await persistState(db);
           }
         }
@@ -1014,7 +1031,7 @@
           const legacy = localStorage.getItem('ds_library_data');
           if (legacy) {
             const legacyState = JSON.parse(legacy);
-            state = { ...defaults, ...legacyState, profile: { ...defaults.profile, ...(legacyState.profile || {}) } };
+            state = { ...defaults, ...legacyState, profile: mergeSavedProfile(defaults.profile, legacyState.profile) };
             if (!state.modules || !state.modules.length) {
               state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
             }
@@ -1035,7 +1052,7 @@
           const legacy = localStorage.getItem('ds_library_data');
           if (legacy) {
             const legacyState = JSON.parse(legacy);
-            state = { ...defaults, ...legacyState, profile: { ...defaults.profile, ...(legacyState.profile || {}) } };
+            state = { ...defaults, ...legacyState, profile: mergeSavedProfile(defaults.profile, legacyState.profile) };
             if (!state.modules || !state.modules.length) {
               state.modules = defaultModules.map(module => ({ ...module, docs: module.docs || [] }));
             }
