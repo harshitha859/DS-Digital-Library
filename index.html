@@ -1201,19 +1201,18 @@
       modal.classList.add('flex');
       try {
         if (!window.pdfjsLib) throw new Error('The PDF viewer library did not load. Use the download link instead.');
-        let bytes;
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        let loadingTask;
         if (file.url) {
-          const response = await fetch(file.url);
-          if (!response.ok) throw new Error(`Could not load PDF (${response.status}).`);
-          bytes = new Uint8Array(await response.arrayBuffer());
+          loadingTask = window.pdfjsLib.getDocument({ url: new URL(file.url, document.baseURI).href });
         } else {
           const encodedData = file.data.includes(',') ? file.data.slice(file.data.indexOf(',') + 1) : file.data;
           const binary = atob(encodedData);
-          bytes = new Uint8Array(binary.length);
+          const bytes = new Uint8Array(binary.length);
           for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+          loadingTask = window.pdfjsLib.getDocument({ data: bytes });
         }
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+        const pdf = await loadingTask.promise;
         if (requestId !== pdfRenderSequence) return;
         activePdfDocument = pdf;
         activePdfPage = 1;
